@@ -6,9 +6,9 @@
   <img src="VRAMonitor\VRAMonitor\Assets/VRAMonitor-Icon-512.png" alt="" width="128">
 </div>
 
-<div align="center">
-# VRAMonitor
-</div>
+<h2 align="center">
+VRAMonitor
+</h2>
 
 <div align="center">
 💖 一款可以查看每个应用显存使用量的应用，基于 WinUI3 构建 😎
@@ -18,13 +18,18 @@
 </div>
 
 <div align="center">
-[中文README](README.md) | [English README](README_en.md)
+
+[中文 README](README.md) | [English README](README_en.md)
+
 </div>
 
 <div align=center>
+
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/)
 [![zread](https://img.shields.io/badge/Ask_Zread-_.svg?style=flat&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff)](https://zread.ai/)
+
 </div>
+
 
 ------
 
@@ -60,7 +65,7 @@
 
 ## 屏幕截图
 
-暂无
+![暂无](Screenshots\1.png)
 
 
 
@@ -96,7 +101,8 @@ Windows 10, version 1903 (10.0.18362.0)
 
 **软件下载地址：**
 
-[Releases](https://github.com/jin6yang/VRAMonitor/releases)
+| GitHub | [Releases](https://github.com/jin6yang/VRAMonitor/releases) |
+| ------ | ----------------------------------------------------------- |
 
 **如何安装：**
 
@@ -104,20 +110,29 @@ Windows 10, version 1903 (10.0.18362.0)
 
 [旁加载第三方应用 | Microsoft Learn](https://learn.microsoft.com/windows/application-management/sideload-apps-in-windows)
 
+**如何删除证书?**
+
+1. 	按 **Win + R** 打开运行框
+2. 	输入：
+
+```
+certmgr.msc
+```
+
+3. **受信任的根证书颁发机构 → 证书**
+4. 在右侧找到颁发者为 **POINTER** 的证书
+5. 右键 → **删除**
+
 
 
 ## 自己构建
 
-打开 Visual Studio 2026
-（确保拥有 “WinUI 应用程序开发” 工作负荷 和 “.NET 10.0 运行时” 单个组件）
-
-打开项目文件 'VRAMonitor.sln'
-
-右键解决方案，选择“还原 NuGet 包”
-
-再次右键解决方案，选择“重新生成解决方案”
-
-右键 ‘VRAMonitor (Packeage)’, 选择”发布-创建应用程序包“
+1. 打开 Visual Studio 2026
+   （确保拥有 “WinUI 应用程序开发” 工作负荷 和 “.NET 10.0 运行时” 单个组件）
+2. 打开项目文件 'VRAMonitor.sln'
+3. 右键解决方案，选择“还原 NuGet 包”
+4. 再次右键解决方案，选择“重新生成解决方案”
+5. 右键 ‘VRAMonitor (Packeage)’, 选择”发布-创建应用程序包“
 
 
 
