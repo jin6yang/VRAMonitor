@@ -67,6 +67,10 @@ VRAMonitor
 
 ![暂无](Screenshots\1.png)
 
+![暂无](Screenshots\2.png)
+
+![暂无](Screenshots\3.png)
+
 
 
 ## 更新路线
@@ -93,20 +97,20 @@ VRAMonitor
 
 ## 即刻体验
 
-**软件最低要求:**
+**最低系统要求:**
 
 Windows 10, version 1903 (10.0.18362.0)
 
 .NET Desktop Runtime 10 | [下载 .NET 10.0 (Linux、macOS 和 Windows) | .NET](https://dotnet.microsoft.com/download/dotnet/10.0)
 
-**软件下载地址：**
+**下载：**
 
 | GitHub | [Releases](https://github.com/jin6yang/VRAMonitor/releases) |
 | ------ | ----------------------------------------------------------- |
 
-**如何安装：**
+**安装：**
 
-> **注意！**在导入安全证书时，要选择存储位置为”**本地计算机**(L)“，选择证书存储时，需要选择“**将所有的证书都放入下列存储**(P)”，然后点击**浏览**，选择“**受信任的根证书颁发机构**”，按向导完成证书导入后，打开 '.msixbundle' 安装包即可安装应用。
+> **注意！**在导入安全证书时，要选择存储位置为”**本地计算机**“，选择证书存储时，需要选择“**将所有的证书都放入下列存储**”，然后点击**浏览**，选择“**受信任的根证书颁发机构**”，按向导完成证书导入后，打开 `.msixbundle` 安装包即可安装应用。
 
 [旁加载第三方应用 | Microsoft Learn](https://learn.microsoft.com/windows/application-management/sideload-apps-in-windows)
 
@@ -119,8 +123,8 @@ Windows 10, version 1903 (10.0.18362.0)
 certmgr.msc
 ```
 
-3. **受信任的根证书颁发机构 → 证书**
-4. 在右侧找到颁发者为 **POINTER** 的证书
+3. 选择 **受信任的根证书颁发机构 → 证书**
+4. 找到颁发者为 **POINTER** 的证书
 5. 右键 → **删除**
 
 
@@ -129,10 +133,11 @@ certmgr.msc
 
 1. 打开 Visual Studio 2026
    （确保拥有 “WinUI 应用程序开发” 工作负荷 和 “.NET 10.0 运行时” 单个组件）
-2. 打开项目文件 'VRAMonitor.sln'
+2. 打开项目文件 `VRAMonitor.sln`
 3. 右键解决方案，选择“还原 NuGet 包”
 4. 再次右键解决方案，选择“重新生成解决方案”
-5. 右键 ‘VRAMonitor (Packeage)’, 选择”发布-创建应用程序包“
+5. 右键 `VRAMonitor (Packeage)`, 选择”发布-创建应用程序包“
+6. 按引导完成创建 MSIX安装包
 
 
 
