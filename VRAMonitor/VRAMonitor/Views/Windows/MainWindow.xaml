@@ -1,0 +1,345 @@
+<Window
+    x:Class="VRAMonitor.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:VRAMonitor"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:VRAMonitor.Models"
+    xmlns:tb="using:H.NotifyIcon"
+    mc:Ignorable="d"
+    Title="VRAMonitor">
+
+    <Grid x:Name="RootGrid">
+
+        <!-- 
+            系统托盘图标
+        -->
+        <tb:TaskbarIcon x:Name="TrayIcon"
+                        IconSource="ms-appx:///Assets/VRAMonitor-Icon-32.ico"
+                        ToolTipText="VRAMonitor"
+                        DoubleClickCommand="{x:Bind ViewModel.ShowWindowCommand}"
+                        ContextMenuMode="SecondWindow"
+                        RequestedTheme="{x:Bind RootGrid.ActualTheme, Mode=OneWay}">
+
+            <tb:TaskbarIcon.ContextFlyout>
+                <MenuFlyout>
+                    <MenuFlyoutItem x:Uid="TrayShowMain" 
+                                    Command="{x:Bind ViewModel.ShowWindowCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE78B;"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+
+                    <MenuFlyoutItem x:Uid="TraySettings" 
+                                    Command="{x:Bind ViewModel.OpenSettingsCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE713;"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+
+                    <MenuFlyoutSeparator />
+
+                    <MenuFlyoutItem x:Uid="TrayExit" 
+                                    Command="{x:Bind ViewModel.ExitApplicationCommand}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE711;"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                </MenuFlyout>
+            </tb:TaskbarIcon.ContextFlyout>
+        </tb:TaskbarIcon>
+
+        <!-- 
+            布局 1: Standard Grid 样式
+        -->
+        <Grid x:Name="StandardGridStyleLayout" Visibility="{x:Bind ViewModel.StandardGridStyleVisibility, Mode=OneWay}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- 自定义标题栏 -->
+            <!-- [修改] 移除了 Grid.ColumnDefinitions，改为层叠布局以支持绝对居中 -->
+            <Grid x:Name="AppTitleBar" 
+                  Grid.Row="0"
+                  Height="48" 
+                  VerticalAlignment="Top"
+                  Canvas.ZIndex="1">
+
+                <!-- 左侧内容区：添加 Margin 避让后退按钮区域 (约48px) -->
+                <StackPanel x:Name="StandardAppTitleBarLeftContent"
+                            Orientation="Horizontal" 
+                            Spacing="8" 
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Left"
+                            Margin="52,0,0,0">
+
+                    <Image Source="/Assets/VRAMonitor-Icon-512.png" 
+                           Height="16" 
+                           Width="16" 
+                           VerticalAlignment="Center"/>
+
+                    <TextBlock x:Uid="AppTitle" 
+                               VerticalAlignment="Center" 
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               FontWeight="SemiBold"/>
+
+                    <TextBlock Text="{x:Bind ViewModel.AppVersion, Mode=OneWay}" 
+                               VerticalAlignment="Center" 
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Opacity="0.5"/>
+
+                    <Border Visibility="{x:Bind ViewModel.IsPreview, Mode=OneWay}"
+                            Background="{ThemeResource SystemControlHighlightAccentBrush}" 
+                            CornerRadius="4" 
+                            VerticalAlignment="Center" 
+                            Padding="6,2">
+                        <TextBlock Text="{x:Bind ViewModel.AppChannel, Mode=OneWay}" 
+                                   FontSize="10" 
+                                   Foreground="White" 
+                                   FontWeight="Bold"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- 中间：搜索框 (绝对居中) -->
+                <AutoSuggestBox x:Name="TitleBarSearchBox"
+                                x:Uid="SearchPlaceholder"
+                                Width="360"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                QueryIcon="Find" />
+            </Grid>
+
+            <NavigationView x:Name="StandardGridNavigationView"
+                            Grid.Row="0" 
+                            Grid.RowSpan="2"
+                            Canvas.ZIndex="0"
+                            IsTitleBarAutoPaddingEnabled="False"
+                            IsBackButtonVisible="{x:Bind BooleanToBackButtonVisibility(ViewModel.IsBackButtonVisible), Mode=OneWay}"
+                            IsBackEnabled="True"
+                            IsPaneToggleButtonVisible="True" 
+                            IsSettingsVisible="True"
+                            PaneDisplayMode="Left"
+                            SelectionChanged="NavigationView_SelectionChanged"
+                            BackRequested="NavigationView_BackRequested"
+                            DisplayModeChanged="StandardGridNavigationView_DisplayModeChanged">
+
+                <NavigationView.Resources>
+                    <Thickness x:Key="NavigationViewContentMargin">0,48,0,0</Thickness>
+                    <Thickness x:Key="NavigationViewMinimalContentMargin">0,48,0,0</Thickness>
+                </NavigationView.Resources>
+
+                <NavigationView.MenuItems>
+                    <NavigationViewItem x:Uid="NavProcess" Tag="ProcessManager">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xECAA;"/>
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem x:Uid="NavServices" Tag="Services">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xEA86;"/>
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem x:Uid="NavBattery" Tag="Battery">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xEBBE;"/>
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem x:Uid="NavAbout" Tag="About">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE946;"/>
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                </NavigationView.MenuItems>
+
+                <Frame x:Name="TitleBarContentFrame"/>
+            </NavigationView>
+
+        </Grid>
+
+        <!-- 
+            布局 2: Only Top 样式
+        -->
+        <Grid x:Name="OnlyTopStyleLayout" Visibility="{x:Bind ViewModel.OnlyTopStyleVisibility, Mode=OneWay}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- [修改] 同样改为绝对居中布局 -->
+            <Grid x:Name="OnlyTopAppTitleBar" 
+                  Grid.Row="0"
+                  Height="48" 
+                  VerticalAlignment="Top"
+                  Canvas.ZIndex="1">
+
+                <StackPanel x:Name="OnlyTopAppTitleBarLeftContent"
+                            Orientation="Horizontal" 
+                            Spacing="8" 
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Left"
+                            Margin="52,0,0,0">
+
+                    <Image Source="/Assets/VRAMonitor-Icon-512.png" 
+                           Height="16" 
+                           Width="16" 
+                           VerticalAlignment="Center"/>
+
+                    <TextBlock x:Uid="AppTitle" 
+                               VerticalAlignment="Center" 
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               FontWeight="SemiBold"/>
+
+                    <TextBlock Text="{x:Bind ViewModel.AppVersion, Mode=OneWay}" 
+                               VerticalAlignment="Center" 
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Opacity="0.5"/>
+
+                    <Border Visibility="{x:Bind ViewModel.IsPreview, Mode=OneWay}"
+                            Background="{ThemeResource SystemControlHighlightAccentBrush}" 
+                            CornerRadius="4" 
+                            VerticalAlignment="Center" 
+                            Padding="6,2">
+                        <TextBlock Text="{x:Bind ViewModel.AppChannel, Mode=OneWay}" 
+                                   FontSize="10" 
+                                   Foreground="White" 
+                                   FontWeight="Bold"/>
+                    </Border>
+                </StackPanel>
+
+                <AutoSuggestBox Grid.Column="2"
+                                x:Name="OnlyTopSearchBox"
+                                x:Uid="SearchPlaceholder"
+                                Width="360"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                QueryIcon="Find" />
+            </Grid>
+
+            <NavigationView x:Name="OnlyTopNavigationView"
+                            Grid.Row="0" 
+                            Grid.RowSpan="2"
+                            Canvas.ZIndex="0"
+                            IsTitleBarAutoPaddingEnabled="False"
+                            IsBackButtonVisible="{x:Bind BooleanToBackButtonVisibility(ViewModel.IsBackButtonVisible), Mode=OneWay}"
+                            IsBackEnabled="True"
+                            IsPaneToggleButtonVisible="True" 
+                            IsSettingsVisible="True"
+                            PaneDisplayMode="LeftCompact"
+                            SelectionChanged="NavigationView_SelectionChanged"
+                            BackRequested="NavigationView_BackRequested"
+                            DisplayModeChanged="StandardGridNavigationView_DisplayModeChanged">
+
+                <NavigationView.Resources>
+                    <Thickness x:Key="NavigationViewContentMargin">0,48,0,0</Thickness>
+                    <Thickness x:Key="NavigationViewMinimalContentMargin">0,48,0,0</Thickness>
+                </NavigationView.Resources>
+
+                <NavigationView.MenuItems>
+                    <NavigationViewItem x:Uid="NavProcess" Tag="ProcessManager">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xECAA;"/>
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem x:Uid="NavServices" Tag="Services">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xEA86;"/>
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem x:Uid="NavBattery" Tag="Battery">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xEBBE;"/>
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem x:Uid="NavAbout" Tag="About">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE946;"/>
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                </NavigationView.MenuItems>
+
+                <Frame x:Name="OnlyTopContentFrame"/>
+            </NavigationView>
+        </Grid>
+
+        <!-- 
+            布局 3: Only Left 样式 (保持不变)
+        -->
+        <Grid x:Name="OnlyLeftStyleLayout" Visibility="{x:Bind ViewModel.OnlyLeftStyleVisibility, Mode=OneWay}">
+            <Grid x:Name="CustomTitleBar" Height="48" VerticalAlignment="Top" Background="Transparent" Canvas.ZIndex="0" />
+
+            <NavigationView x:Name="OnlyLeftNavigationView"
+                        Canvas.ZIndex="1"
+                        IsBackButtonVisible="{x:Bind BooleanToBackButtonVisibility(ViewModel.IsBackButtonVisible), Mode=OneWay}"
+                        IsSettingsVisible="True"
+                        SelectionChanged="NavigationView_SelectionChanged"
+                        BackRequested="NavigationView_BackRequested"
+                        IsTitleBarAutoPaddingEnabled="True"
+                        PaneDisplayMode="Left">
+
+                <NavigationView.PaneHeader>
+                    <Grid Height="44" Padding="16,0,0,0">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Image Source="/Assets/VRAMonitor-Icon-512.png" Height="16" Width="16" VerticalAlignment="Center"/>
+
+                            <TextBlock x:Uid="AppTitle" 
+                                       Style="{ThemeResource BodyStrongTextBlockStyle}" 
+                                       VerticalAlignment="Center" 
+                                       FontSize="12"/>
+
+                            <TextBlock Text="{x:Bind ViewModel.AppVersion, Mode=OneWay}" 
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       VerticalAlignment="Center" 
+                                       Opacity="0.5"
+                                       FontSize="11"/>
+
+                            <Border Visibility="{x:Bind ViewModel.IsPreview, Mode=OneWay}"
+                                    Background="{ThemeResource SystemControlHighlightAccentBrush}" 
+                                    CornerRadius="4" 
+                                    VerticalAlignment="Center" 
+                                    Padding="4,1">
+                                <TextBlock Text="{x:Bind ViewModel.AppChannel, Mode=OneWay}" 
+                                           FontSize="9" 
+                                           Foreground="White" 
+                                           FontWeight="Bold"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </NavigationView.PaneHeader>
+
+                <NavigationView.AutoSuggestBox>
+                    <AutoSuggestBox x:Name="NavigationViewSearchBox"
+                                    x:Uid="SearchPlaceholder"
+                                    QueryIcon="Find" />
+                </NavigationView.AutoSuggestBox>
+
+                <NavigationView.MenuItems>
+                    <NavigationViewItem x:Uid="NavProcess" Tag="ProcessManager">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xECAA;"/>
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem x:Uid="NavServices" Tag="Services">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xEA86;"/>
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem x:Uid="NavBattery" Tag="Battery">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xEBBE;"/>
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                    <NavigationViewItem x:Uid="NavAbout" Tag="About">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE946;"/>
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
+                </NavigationView.MenuItems>
+
+                <Frame x:Name="ContentFrame"/>
+            </NavigationView>
+        </Grid>
+    </Grid>
+
+</Window>

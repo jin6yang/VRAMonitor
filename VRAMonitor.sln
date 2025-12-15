@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36310.24 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "VRAMonitor (Package)", "VRAMonitor\VRAMonitor (Package)\VRAMonitor (Package).wapproj", "{44B111A1-EF7C-4812-A6BD-EA578D8C3611}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VRAMonitor", "VRAMonitor\VRAMonitor\VRAMonitor.csproj", "{980BF70D-16A8-4275-A3BF-33005883625F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM64 = Debug|ARM64
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|ARM64 = Release|ARM64
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Debug|ARM64.Build.0 = Debug|ARM64
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Debug|x64.ActiveCfg = Debug|x64
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Debug|x64.Build.0 = Debug|x64
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Debug|x64.Deploy.0 = Debug|x64
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Debug|x86.ActiveCfg = Debug|x86
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Debug|x86.Build.0 = Debug|x86
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Debug|x86.Deploy.0 = Debug|x86
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Release|ARM64.ActiveCfg = Release|ARM64
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Release|ARM64.Build.0 = Release|ARM64
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Release|ARM64.Deploy.0 = Release|ARM64
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Release|x64.ActiveCfg = Release|x64
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Release|x64.Build.0 = Release|x64
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Release|x64.Deploy.0 = Release|x64
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Release|x86.ActiveCfg = Release|x86
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Release|x86.Build.0 = Release|x86
+		{44B111A1-EF7C-4812-A6BD-EA578D8C3611}.Release|x86.Deploy.0 = Release|x86
+		{980BF70D-16A8-4275-A3BF-33005883625F}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{980BF70D-16A8-4275-A3BF-33005883625F}.Debug|ARM64.Build.0 = Debug|ARM64
+		{980BF70D-16A8-4275-A3BF-33005883625F}.Debug|x64.ActiveCfg = Debug|x64
+		{980BF70D-16A8-4275-A3BF-33005883625F}.Debug|x64.Build.0 = Debug|x64
+		{980BF70D-16A8-4275-A3BF-33005883625F}.Debug|x86.ActiveCfg = Debug|x86
+		{980BF70D-16A8-4275-A3BF-33005883625F}.Debug|x86.Build.0 = Debug|x86
+		{980BF70D-16A8-4275-A3BF-33005883625F}.Release|ARM64.ActiveCfg = Release|ARM64
+		{980BF70D-16A8-4275-A3BF-33005883625F}.Release|ARM64.Build.0 = Release|ARM64
+		{980BF70D-16A8-4275-A3BF-33005883625F}.Release|x64.ActiveCfg = Release|x64
+		{980BF70D-16A8-4275-A3BF-33005883625F}.Release|x64.Build.0 = Release|x64
+		{980BF70D-16A8-4275-A3BF-33005883625F}.Release|x86.ActiveCfg = Release|x86
+		{980BF70D-16A8-4275-A3BF-33005883625F}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {81174317-86FB-413E-9E64-A966F91A83D7}
+	EndGlobalSection
+EndGlobal

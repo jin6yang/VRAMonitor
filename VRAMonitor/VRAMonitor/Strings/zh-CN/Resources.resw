@@ -1,0 +1,451 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle.Text" xml:space="preserve">
+    <value>VRAMonitor</value>
+  </data>
+  <data name="NavProcess.Content" xml:space="preserve">
+    <value>进程</value>
+  </data>
+  <data name="NavServices.Content" xml:space="preserve">
+    <value>服务</value>
+  </data>
+  <data name="NavBattery.Content" xml:space="preserve">
+    <value>电池</value>
+  </data>
+  <data name="NavAbout.Content" xml:space="preserve">
+    <value>关于</value>
+  </data>
+
+  <!-- Search Related Strings -->
+  <data name="SearchPlaceholder_Processes" xml:space="preserve">
+    <value>输入要搜索的名称、发布者或PID</value>
+  </data>
+  <data name="SearchPlaceholder_Unavailable" xml:space="preserve">
+    <value>搜索在此页面不可用</value>
+  </data>
+
+  <data name="TrayShowMain.Text" xml:space="preserve">
+    <value>显示主界面</value>
+  </data>
+  <data name="TraySettings.Text" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="TrayExit.Text" xml:space="preserve">
+    <value>退出</value>
+  </data>
+  
+  <data name="PageTitle_Processes.Text" xml:space="preserve">
+    <value>进程</value>
+  </data>
+  <data name="HeaderApp.Text" xml:space="preserve">
+    <value>应用</value>
+  </data>
+  <data name="HeaderStatus.Text" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="HeaderPID.Text" xml:space="preserve">
+    <value>PID</value>
+  </data>
+  <data name="HeaderVRAM.Text" xml:space="preserve">
+    <value>显存</value>
+  </data>
+  <data name="HeaderEngine.Text" xml:space="preserve">
+    <value>GPU 引擎</value>
+  </data>
+
+  <!-- Context Menu -->
+  <data name="Menu_GroupBy.Text" xml:space="preserve">
+    <value>按名称分组</value>
+  </data>
+  <data name="Menu_EndProcess.Text" xml:space="preserve">
+    <value>结束进程</value>
+  </data>
+  <data name="Menu_Efficiency.Text" xml:space="preserve">
+    <value>效能模式</value>
+  </data>
+  <data name="Menu_OpenLocation.Text" xml:space="preserve">
+    <value>打开文件所在位置</value>
+  </data>
+  <data name="Menu_Properties.Text" xml:space="preserve">
+    <value>属性</value>
+  </data>
+
+  <!-- Status Bar Strings -->
+  <data name="StatusBar_Format" xml:space="preserve">
+    <value>最后更新于: {0} | 监控 {1} 个 GPU | {2}</value>
+  </data>
+  <data name="StatusBar_Stopped" xml:space="preserve">
+    <value>已停止监控</value>
+  </data>
+  <data name="StatusBar_RefreshRate" xml:space="preserve">
+    <value>每 {0:F1} 秒刷新</value>
+  </data>
+
+  <data name="SettingsTitle.Text" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="SettingsSectionGeneral.Text" xml:space="preserve">
+    <value>通用</value>
+  </data>
+  <data name="SettingsStartOnBoot.Header" xml:space="preserve">
+    <value>开机自启</value>
+  </data>
+  <data name="SettingsStartOnBoot.Description" xml:space="preserve">
+    <value>随系统启动自动运行 VRAMonitor</value>
+  </data>
+  
+  <data name="SettingsLanguage.Header" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="SettingsLanguage.Description" xml:space="preserve">
+    <value>选择应用程序显示的语言</value>
+  </data>
+  <data name="SettingsLanguageFollowSystem" xml:space="preserve">
+    <value>跟随系统</value>
+  </data>
+
+  <data name="SettingsCloseAction.Header" xml:space="preserve">
+    <value>关闭动作</value>
+  </data>
+  <data name="SettingsCloseAction.Description" xml:space="preserve">
+    <value>点击窗口关闭按钮时的行为</value>
+  </data>
+  <data name="SettingsCloseActionMinimize.Content" xml:space="preserve">
+    <value>最小化到托盘</value>
+  </data>
+  <data name="SettingsCloseActionExit.Content" xml:space="preserve">
+    <value>退出程序</value>
+  </data>
+  <data name="SettingsTopMost.Header" xml:space="preserve">
+    <value>窗口置顶</value>
+  </data>
+  <data name="SettingsTopMost.Description" xml:space="preserve">
+    <value>配置 Always On Top 功能</value>
+  </data>
+  <data name="SettingsTopMostLearnMore.Header" xml:space="preserve">
+    <value>了解 Always On Top 功能</value>
+  </data>
+  <data name="SettingsTopMostLearnMore.Description" xml:space="preserve">
+    <value>查看 Microsoft 的 Always On Top 文档</value>
+  </data>
+  <data name="SettingsTopMostLaunchPowerToys.Header" xml:space="preserve">
+    <value>已经安装了 PowerToys ? 启动 !</value>
+  </data>
+  <data name="SettingsTopMostLaunchPowerToys.Description" xml:space="preserve">
+    <value>点击即可尝试启动 PowerToys 应用程序</value>
+  </data>
+
+  <data name="SettingsSectionFunctions.Text" xml:space="preserve">
+    <value>功能</value>
+  </data>
+  <data name="SettingsScanInterval.Header" xml:space="preserve">
+    <value>进程扫描间隔</value>
+  </data>
+  <data name="SettingsScanInterval.Description" xml:space="preserve">
+    <value>调整检测频率以平衡性能与实时性</value>
+  </data>
+    <data name="SettingsScanIntervalStopped" xml:space="preserve">
+    <value>已停止</value>
+  </data>
+  <data name="SettingsShowSelectionPill.Header" xml:space="preserve">
+    <value>显示列表选中指示器</value>
+  </data>
+  <data name="SettingsShowSelectionPill.Description" xml:space="preserve">
+    <value>在进程列表中被选中的项目左侧显示 Windows 11 风格的指示条</value>
+  </data>
+
+  <data name="SettingsSectionTheme.Text" xml:space="preserve">
+    <value>主题</value>
+  </data>
+  <data name="SettingsTheme.Header" xml:space="preserve">
+    <value>颜色</value>
+  </data>
+  <data name="SettingsTheme.Description" xml:space="preserve">
+    <value>选择应用程序颜色主题</value>
+  </data>
+  <data name="SettingsThemeDefault.Content" xml:space="preserve">
+    <value>跟随系统</value>
+  </data>
+  <data name="SettingsThemeLight.Content" xml:space="preserve">
+    <value>浅色</value>
+  </data>
+  <data name="SettingsThemeDark.Content" xml:space="preserve">
+    <value>深色</value>
+  </data>
+  <data name="SettingsMaterial.Header" xml:space="preserve">
+    <value>窗口材质</value>
+  </data>
+  <data name="SettingsMaterial.Description" xml:space="preserve">
+    <value>更改窗口背景的视觉效果</value>
+  </data>
+  <data name="SettingsMaterialMica.Content" xml:space="preserve">
+    <value>Mica (云母)</value>
+  </data>
+  <data name="SettingsMaterialMicaAlt.Content" xml:space="preserve">
+    <value>Mica Alt (深色云母)</value>
+  </data>
+  <data name="SettingsMaterialAcrylic.Content" xml:space="preserve">
+    <value>Acrylic (亚克力)</value>
+  </data>
+  <data name="SettingsMaterialAcrylicThin.Content" xml:space="preserve">
+    <value>Acrylic Thin (薄亚克力)</value>
+  </data>
+  <data name="SettingsMaterialAcrylicBlur.Content" xml:space="preserve">
+    <value>Acrylic Blur (毛玻璃)</value>
+  </data>
+  <data name="SettingsMaterialAcrylicThinBlur.Content" xml:space="preserve">
+    <value>Acrylic Thin Blur (薄毛玻璃)</value>
+  </data>
+  <data name="SettingsMaterialMicaSolid.Content" xml:space="preserve">
+    <value>Mica Solid (纯色云母)</value>
+  </data>
+  <data name="SettingsMaterialBlur.Content" xml:space="preserve">
+    <value>Blur (高斯模糊)</value>
+  </data>
+  <data name="SettingsMaterialTransparent.Content" xml:space="preserve">
+    <value>Transparent (透明)</value>
+  </data>
+  <data name="SettingsMaterialNone.Content" xml:space="preserve">
+    <value>None (无)</value>
+  </data>
+  <data name="SettingsLayout.Header" xml:space="preserve">
+    <value>主窗口样式</value>
+  </data>
+  <data name="SettingsLayout.Description" xml:space="preserve">
+    <value>切换导航栏和标题栏的布局模式</value>
+  </data>
+  <data name="LayoutStandard" xml:space="preserve">
+    <value>标准布局</value>
+  </data>
+  <data name="LayoutNoTitle_OnlyLeft" xml:space="preserve">
+    <value>隐藏标题栏</value>
+  </data>
+  <data name="LayoutNoNav_OnlyTop" xml:space="preserve">
+    <value>隐藏导航栏</value>
+  </data>
+  <data name="SettingsFont.Header" xml:space="preserve">
+    <value>字体</value>
+  </data>
+  <data name="SettingsFont.Description" xml:space="preserve">
+    <value>选择应用程序 UI 字体</value>
+  </data>
+  <data name="SettingsFontDefault" xml:space="preserve">
+    <value>系统默认</value>
+  </data>
+  <data name="SettingsSectionShortcuts.Text" xml:space="preserve">
+    <value>快捷键</value>
+  </data>
+  <data name="SettingsTrayShortcut.Header" xml:space="preserve">
+    <value>从托盘呼出窗口</value>
+  </data>
+  <data name="SettingsTrayShortcut.Description" xml:space="preserve">
+    <value>全局快捷键</value>
+  </data>
+  
+  <data name="SettingsSectionAdvanced.Text" xml:space="preserve">
+    <value>高级</value>
+  </data>
+  <data name="SettingsJsonConfig.Header" xml:space="preserve">
+    <value>用户设置 (JSON)</value>
+  </data>
+  <data name="SettingsJsonConfig.Description" xml:space="preserve">
+    <value>管理本地配置文件 (settings.json)</value>
+  </data>
+  <data name="SettingsBtnOpenFolder.Content" xml:space="preserve">
+    <value>在文件资源管理器中显示</value>
+  </data>
+  <data name="SettingsBtnExport.Content" xml:space="preserve">
+    <value>导出</value>
+  </data>
+  <data name="SettingsReset.Header" xml:space="preserve">
+    <value>恢复默认设置</value>
+  </data>
+  <data name="SettingsReset.Description" xml:space="preserve">
+    <value>把用户设置恢复到初始状态</value>
+  </data>
+  <data name="SettingsBtnReset.Content" xml:space="preserve">
+    <value>重置</value>
+  </data>
+
+  <data name="SettingsLanguageRestartTitle" xml:space="preserve">
+    <value>需要重启应用</value>
+  </data>
+  <data name="SettingsLanguageRestartContent" xml:space="preserve">
+    <value>语言更改将在重启应用后生效。</value>
+  </data>
+  <data name="SettingsLanguageRestartNow" xml:space="preserve">
+    <value>立即重启</value>
+  </data>
+  <data name="SettingsLanguageRestartLater" xml:space="preserve">
+    <value>稍后重启</value>
+  </data>
+  <data name="SettingsLanguageRestartCancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+
+  <data name="ShortcutEditorTitle" xml:space="preserve">
+    <value>修改快捷键</value>
+  </data>
+  <data name="ShortcutEditorSave" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="ShortcutEditorCancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  
+  <data name="ShortcutDialog_Instruction" xml:space="preserve">
+    <value>按下组合键以更改此快捷键</value>
+  </data>
+  <data name="ShortcutDialog_Waiting" xml:space="preserve">
+    <value>未设置 (请按下键盘...)</value>
+  </data>
+  <data name="ShortcutDialog_Error" xml:space="preserve">
+    <value>无效快捷键</value>
+  </data>
+  <data name="ShortcutDialog_Reset" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="ShortcutDialog_ResetToolTip" xml:space="preserve">
+    <value>恢复到初始设置</value>
+  </data>
+  <data name="ShortcutDialog_Clear" xml:space="preserve">
+    <value>清除</value>
+  </data>
+  <data name="ShortcutDialog_ClearToolTip" xml:space="preserve">
+    <value>清除快捷键 (设为空)</value>
+  </data>
+  <data name="ShortcutDialog_Description" xml:space="preserve">
+    <value>只有以 Ctrl、Alt、Shift 或 Win 开头的快捷键才有效。</value>
+  </data>
+
+  <data name="SettingsResetConfirmTitle" xml:space="preserve">
+    <value>恢复默认设置?</value>
+  </data>
+  <data name="SettingsResetConfirmContent" xml:space="preserve">
+    <value>这将把所有设置重置为初始状态。此操作无法撤销。</value>
+  </data>
+  <data name="SettingsResetConfirmPrimary" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="SettingsResetConfirmCancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+
+</root>

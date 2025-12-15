@@ -1,0 +1,451 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle.Text" xml:space="preserve">
+    <value>VRAMonitor</value>
+  </data>
+  <data name="NavProcess.Content" xml:space="preserve">
+    <value>Processes</value>
+  </data>
+  <data name="NavServices.Content" xml:space="preserve">
+    <value>Services</value>
+  </data>
+  <data name="NavBattery.Content" xml:space="preserve">
+    <value>Battery</value>
+  </data>
+  <data name="NavAbout.Content" xml:space="preserve">
+    <value>About</value>
+  </data>
+
+  <!-- Search Related Strings -->
+  <data name="SearchPlaceholder_Processes" xml:space="preserve">
+    <value>Search by name, publisher or PID</value>
+  </data>
+  <data name="SearchPlaceholder_Unavailable" xml:space="preserve">
+    <value>Search unavailable on this page</value>
+  </data>
+
+  <data name="PageTitle_Processes.Text" xml:space="preserve">
+    <value>Processes</value>
+  </data>
+    <data name="HeaderApp.Text" xml:space="preserve">
+    <value>Application</value>
+  </data>
+  <data name="HeaderStatus.Text" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="HeaderPID.Text" xml:space="preserve">
+    <value>PID</value>
+  </data>
+  <data name="HeaderVRAM.Text" xml:space="preserve">
+    <value>VRAM</value>
+  </data>
+  <data name="HeaderEngine.Text" xml:space="preserve">
+    <value>GPU Engine</value>
+  </data>
+
+  <!-- [New] Context Menu -->
+  <data name="Menu_GroupBy.Text" xml:space="preserve">
+    <value>Group by Name</value>
+  </data>
+  <data name="Menu_EndProcess.Text" xml:space="preserve">
+    <value>End Process</value>
+  </data>
+  <data name="Menu_Efficiency.Text" xml:space="preserve">
+    <value>Efficiency Mode</value>
+  </data>
+  <data name="Menu_OpenLocation.Text" xml:space="preserve">
+    <value>Open File Location</value>
+  </data>
+  <data name="Menu_Properties.Text" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+
+  <!-- Status Bar Strings -->
+  <data name="StatusBar_Format" xml:space="preserve">
+    <value>Last Updated: {0} | Monitoring {1} GPUs | {2}</value>
+  </data>
+  <data name="StatusBar_Stopped" xml:space="preserve">
+    <value>Monitoring Stopped</value>
+  </data>
+  <data name="StatusBar_RefreshRate" xml:space="preserve">
+    <value>Refreshes every {0:F1}s</value>
+  </data>
+
+  <data name="TrayShowMain.Text" xml:space="preserve">
+    <value>Show Window</value>
+  </data>
+  <data name="TraySettings.Text" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="TrayExit.Text" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="SettingsTitle.Text" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsSectionGeneral.Text" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="SettingsStartOnBoot.Header" xml:space="preserve">
+    <value>Start on Boot</value>
+  </data>
+  <data name="SettingsStartOnBoot.Description" xml:space="preserve">
+    <value>Run VRAMonitor automatically when system starts</value>
+  </data>
+  
+  <data name="SettingsLanguage.Header" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="SettingsLanguage.Description" xml:space="preserve">
+    <value>Select application display language</value>
+  </data>
+  <data name="SettingsLanguageFollowSystem" xml:space="preserve">
+    <value>Follow System</value>
+  </data>
+
+  <data name="SettingsCloseAction.Header" xml:space="preserve">
+    <value>Close Action</value>
+  </data>
+  <data name="SettingsCloseAction.Description" xml:space="preserve">
+    <value>Behavior when clicking the close button</value>
+  </data>
+  <data name="SettingsCloseActionMinimize.Content" xml:space="preserve">
+    <value>Minimize to tray</value>
+  </data>
+  <data name="SettingsCloseActionExit.Content" xml:space="preserve">
+    <value>Exit application</value>
+  </data>
+  <data name="SettingsTopMost.Header" xml:space="preserve">
+    <value>Always On Top</value>
+  </data>
+  <data name="SettingsTopMost.Description" xml:space="preserve">
+    <value>Configure Always On Top behavior</value>
+  </data>
+  <data name="SettingsTopMostLearnMore.Header" xml:space="preserve">
+    <value>Learn more about Always On Top</value>
+  </data>
+  <data name="SettingsTopMostLearnMore.Description" xml:space="preserve">
+    <value>Visit Microsoft documentation</value>
+  </data>
+  <data name="SettingsTopMostLaunchPowerToys.Header" xml:space="preserve">
+    <value>Installed PowerToys? Launch it!</value>
+  </data>
+  <data name="SettingsTopMostLaunchPowerToys.Description" xml:space="preserve">
+    <value>Click to launch PowerToys application</value>
+  </data>
+  <data name="SettingsSectionFunctions.Text" xml:space="preserve">
+    <value>Functions</value>
+  </data>
+  <data name="SettingsScanInterval.Header" xml:space="preserve">
+    <value>Process Scan Interval</value>
+  </data>
+  <data name="SettingsScanInterval.Description" xml:space="preserve">
+    <value>Adjust frequency to balance performance</value>
+  </data>
+    <data name="SettingsScanIntervalStopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
+    <data name="SettingsShowSelectionPill.Header" xml:space="preserve">
+    <value>Show List Selection Indicator</value>
+  </data>
+  <data name="SettingsShowSelectionPill.Description" xml:space="preserve">
+    <value>Show Windows 11 style selection pill indicator on the left of selected item</value>
+  </data>
+
+  <data name="SettingsSectionTheme.Text" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="SettingsTheme.Header" xml:space="preserve">
+    <value>Color Mode</value>
+  </data>
+  <data name="SettingsTheme.Description" xml:space="preserve">
+    <value>Select application color theme</value>
+  </data>
+  <data name="SettingsThemeDefault.Content" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="SettingsThemeLight.Content" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="SettingsThemeDark.Content" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+
+  <data name="SettingsMaterial.Header" xml:space="preserve">
+    <value>Window Material</value>
+  </data>
+  <data name="SettingsMaterial.Description" xml:space="preserve">
+    <value>Change the visual effect of window background</value>
+  </data>
+  <data name="SettingsMaterialMica.Content" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="SettingsMaterialMicaAlt.Content" xml:space="preserve">
+    <value>Mica Alt</value>
+  </data>
+  <data name="SettingsMaterialAcrylic.Content" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="SettingsMaterialAcrylicThin.Content" xml:space="preserve">
+    <value>Acrylic Thin</value>
+  </data>
+    <data name="SettingsMaterialAcrylicBlur.Content" xml:space="preserve">
+    <value>Acrylic Blur</value>
+  </data>
+  <data name="SettingsMaterialAcrylicThinBlur.Content" xml:space="preserve">
+    <value>Acrylic Thin Blur</value>
+  </data>
+  <data name="SettingsMaterialMicaSolid.Content" xml:space="preserve">
+    <value>Mica Solid</value>
+  </data>
+  <data name="SettingsMaterialBlur.Content" xml:space="preserve">
+    <value>Blur</value>
+  </data>
+  <data name="SettingsMaterialTransparent.Content" xml:space="preserve">
+    <value>Transparent</value>
+  </data>
+  <data name="SettingsMaterialNone.Content" xml:space="preserve">
+    <value>None</value>
+  </data>
+  
+  <data name="SettingsLayout.Header" xml:space="preserve">
+    <value>Main Window Layout</value>
+  </data>
+  <data name="SettingsLayout.Description" xml:space="preserve">
+    <value>Switch navigation and title bar layout</value>
+  </data>
+  <data name="SettingsFont.Header" xml:space="preserve">
+    <value>Font</value>
+  </data>
+  <data name="SettingsFont.Description" xml:space="preserve">
+    <value>Select application UI font</value>
+  </data>
+    <data name="SettingsFontDefault" xml:space="preserve">
+    <value>System Default</value>
+  </data>
+
+  <data name="SettingsSectionShortcuts.Text" xml:space="preserve">
+    <value>Shortcuts</value>
+  </data>
+  <data name="SettingsTrayShortcut.Header" xml:space="preserve">
+    <value>Summon Window</value>
+  </data>
+  <data name="SettingsTrayShortcut.Description" xml:space="preserve">
+    <value>Global shortcut</value>
+  </data>
+  <data name="SettingsSectionAdvanced.Text" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="SettingsJsonConfig.Header" xml:space="preserve">
+    <value>User Settings (JSON)</value>
+  </data>
+  <data name="SettingsJsonConfig.Description" xml:space="preserve">
+    <value>Manage local configuration file</value>
+  </data>
+  <data name="SettingsBtnOpenFolder.Content" xml:space="preserve">
+    <value>Open in Explorer</value>
+  </data>
+  <data name="SettingsBtnExport.Content" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="SettingsReset.Header" xml:space="preserve">
+    <value>Restore Defaults</value>
+  </data>
+  <data name="SettingsReset.Description" xml:space="preserve">
+    <value>Reset all settings to default state</value>
+  </data>
+  <data name="SettingsBtnReset.Content" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="LayoutStandard" xml:space="preserve">
+    <value>Standard Grid</value>
+  </data>
+  <data name="LayoutNoTitle_OnlyLeft" xml:space="preserve">
+    <value>Hide Title Bar</value>
+  </data>
+  <data name="LayoutNoNav_OnlyTop" xml:space="preserve">
+    <value>Hide Navigation</value>
+  </data>
+
+  <data name="SettingsLanguageRestartTitle" xml:space="preserve">
+    <value>Restart Required</value>
+  </data>
+  <data name="SettingsLanguageRestartContent" xml:space="preserve">
+    <value>Language changes will take effect after restarting the application.</value>
+  </data>
+  <data name="SettingsLanguageRestartNow" xml:space="preserve">
+    <value>Restart Now</value>
+  </data>
+  <data name="SettingsLanguageRestartLater" xml:space="preserve">
+    <value>Restart Later</value>
+  </data>
+  <data name="SettingsLanguageRestartCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+
+  <data name="ShortcutEditorTitle" xml:space="preserve">
+    <value>Edit Shortcut</value>
+  </data>
+  <data name="ShortcutEditorSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="ShortcutEditorCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  
+  <data name="ShortcutDialog_Instruction" xml:space="preserve">
+    <value>Press a key combination to change this shortcut</value>
+  </data>
+  <data name="ShortcutDialog_Waiting" xml:space="preserve">
+    <value>None (Press keys...)</value>
+  </data>
+  <data name="ShortcutDialog_Error" xml:space="preserve">
+    <value>Invalid shortcut</value>
+  </data>
+  <data name="ShortcutDialog_Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="ShortcutDialog_ResetToolTip" xml:space="preserve">
+    <value>Reset to default</value>
+  </data>
+  <data name="ShortcutDialog_Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="ShortcutDialog_ClearToolTip" xml:space="preserve">
+    <value>Clear shortcut (set to None)</value>
+  </data>
+  <data name="ShortcutDialog_Description" xml:space="preserve">
+    <value>Only shortcuts starting with Ctrl, Alt, Shift or Win are valid.</value>
+  </data>
+
+  <data name="SettingsResetConfirmTitle" xml:space="preserve">
+    <value>Restore Defaults?</value>
+  </data>
+  <data name="SettingsResetConfirmContent" xml:space="preserve">
+    <value>This will reset all settings to default state. This action cannot be undone.</value>
+  </data>
+  <data name="SettingsResetConfirmPrimary" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="SettingsResetConfirmCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+
+</root>

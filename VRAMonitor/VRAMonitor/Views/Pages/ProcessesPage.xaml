@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="VRAMonitor.Views.Pages.ProcessesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:VRAMonitor.Views.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:VRAMonitor.Models"
+    xmlns:helpers="using:VRAMonitor.Helpers"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <CollectionViewSource x:Name="ProcessCVS" IsSourceGrouped="False" />
+
+        <!-- [新增] 定义两种 ListViewItem 样式 -->
+        <!-- 1. 无胶囊指示器 (默认) -->
+        <Style x:Key="ProcessItemStyle_NoPill" TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="12,0,12,0"/>
+        </Style>
+
+        <!-- 2. 有胶囊指示器 (基于 WinUI 默认样式) -->
+        <Style x:Key="ProcessItemStyle_WithPill" TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="12,0,12,0"/>
+        </Style>
+
+        <DataTemplate x:Key="ProcessItemTemplate" x:DataType="models:GpuProcess">
+            <Grid Padding="0,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" MinWidth="200"/>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="150"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 1. 应用 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                    <Image Source="{x:Bind Icon, Mode=OneWay}" Width="24" Height="24" Stretch="Uniform"/>
+                    <TextBlock Text="{x:Bind Name, Mode=OneWay}" VerticalAlignment="Center" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+
+                <!-- 2. 状态 (效能模式图标) -->
+                <FontIcon Grid.Column="1"
+                          x:Uid="Process_EfficiencyIcon"
+                          Glyph="&#xEC0A;" 
+                          Foreground="ForestGreen" 
+                          Visibility="{x:Bind EfficiencyIconVisibility, Mode=OneWay}"
+                          HorizontalAlignment="Center" 
+                          VerticalAlignment="Center"
+                          FontSize="14"/>
+
+                <!-- 3. PID -->
+                <TextBlock Grid.Column="2" Text="{x:Bind Pid}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+                <!-- 4. 显存 -->
+                <TextBlock Grid.Column="3" Text="{x:Bind VramUsageFormatted, Mode=OneWay}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+
+                <!-- 5. GPU 引擎 -->
+                <TextBlock Grid.Column="4" Text="{x:Bind GpuEngine, Mode=OneWay}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+    <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="20">
+        <!-- 顶部标题区 -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock x:Uid="PageTitle_Processes" Text="Processes" Style="{ThemeResource TitleTextBlockStyle}"/>
+
+            <TextBlock x:Name="GpuNameTextBlock" Text="{x:Bind ViewModel.GpuName, Mode=OneWay}" Style="{ThemeResource SubtitleTextBlockStyle}"/>
+            <TextBlock Text="{x:Bind ViewModel.TotalVramStatus, Mode=OneWay}" 
+                       Style="{ThemeResource BodyStrongTextBlockStyle}" 
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       Margin="0,2,0,0"/>
+        </StackPanel>
+
+        <!-- 表头 (ListView 无法自动生成表头，使用 Grid 模拟以保持 DataGrid 的外观) -->
+        <Grid Grid.Row="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="12,8" CornerRadius="4,4,0,0" BorderThickness="1,1,1,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" MinWidth="200"/>
+                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="80"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="150"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" x:Uid="HeaderApp" Text="Application" FontWeight="SemiBold" Opacity="0.8"/>
+            <TextBlock Grid.Column="1" x:Uid="HeaderStatus" Text="Status" FontWeight="SemiBold" Opacity="0.8" HorizontalAlignment="Center"/>
+            <TextBlock Grid.Column="2" x:Uid="HeaderPID" Text="PID" FontWeight="SemiBold" Opacity="0.8"/>
+            <TextBlock Grid.Column="3" x:Uid="HeaderVRAM" Text="VRAM" FontWeight="SemiBold" Opacity="0.8"/>
+            <TextBlock Grid.Column="4" x:Uid="HeaderEngine" Text="Engine" FontWeight="SemiBold" Opacity="0.8"/>
+        </Grid>
+
+        <!-- ListView 主体 -->
+        <!-- [修改] 移除了内联的 ItemContainerStyle，将在代码隐藏中动态设置 -->
+        <ListView
+            x:Name="ProcessListView"
+            Grid.Row="2"
+            ItemsSource="{x:Bind ProcessCVS.View, Mode=OneWay}"
+            SelectedItem="{x:Bind ViewModel.SelectedProcess, Mode=TwoWay}"
+            SelectionMode="Single"
+            ItemTemplate="{StaticResource ProcessItemTemplate}"
+            BorderThickness="1,0,1,1"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            CornerRadius="0,0,4,4">
+
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsStackPanel AreStickyGroupHeadersEnabled="True"/>
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+
+            <ListView.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate x:DataType="helpers:GroupInfoList">
+                            <Border Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}" Height="32" Padding="10,0">
+                                <TextBlock Text="{x:Bind Key}" Style="{ThemeResource TitleTextBlockStyle}" VerticalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </ListView.GroupStyle>
+
+            <!-- ListView 右键菜单 -->
+            <ListView.ContextFlyout>
+                <MenuFlyout>
+                    <ToggleMenuFlyoutItem x:Uid="Menu_GroupBy" 
+                                          Text="Group by Name" 
+                                          IsChecked="{x:Bind ViewModel.IsGrouped, Mode=OneWay}" 
+                                          Command="{x:Bind ViewModel.ToggleGroupingCommand}">
+                        <ToggleMenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE179;" />
+                        </ToggleMenuFlyoutItem.Icon>
+                    </ToggleMenuFlyoutItem>
+
+                    <MenuFlyoutSeparator />
+
+                    <MenuFlyoutItem x:Uid="Menu_EndProcess" Text="End Process" Click="OnEndProcessClick">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE733;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+
+                    <MenuFlyoutItem x:Uid="Menu_Efficiency" Text="Efficiency Mode" Click="OnEfficiencyModeClick">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xEC0A;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+
+                    <MenuFlyoutItem x:Uid="Menu_OpenLocation" Text="Open File Location" Click="OnOpenLocationClick">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE8DA;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+
+                    <MenuFlyoutItem x:Uid="Menu_Properties" Text="Properties" Click="OnPropertiesClick">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xF000;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                </MenuFlyout>
+            </ListView.ContextFlyout>
+        </ListView>
+
+        <!-- 底部状态栏 -->
+        <TextBlock Grid.Row="3" Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
+                   Margin="0,10,0,0" Style="{ThemeResource CaptionTextBlockStyle}"/>
+    </Grid>
+</Page>

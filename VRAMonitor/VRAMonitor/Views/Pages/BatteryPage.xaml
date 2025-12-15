@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="VRAMonitor.Views.Pages.BatteryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:VRAMonitor.Views.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <!-- 流光动画 -->
+        <Storyboard x:Name="ChargingFlowStoryboard" RepeatBehavior="Forever">
+            <DoubleAnimation
+                Storyboard.TargetName="ShimmerTranslate"
+                Storyboard.TargetProperty="X"
+                From="-200" To="400"
+                Duration="0:0:2.5"
+                EnableDependentAnimation="True">
+                <!-- 使用 SineEase 让流动更柔和 -->
+                <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+    </Page.Resources>
+
+    <Grid Padding="24" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <!-- 标题行 -->
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <TextBlock Text="电池" FontSize="24" FontWeight="SemiBold"/>
+            <TextBlock Text="{x:Bind ViewModel.DebugSummary, Mode=OneWay}"
+                       VerticalAlignment="Center" Opacity="0.6"/>
+        </StackPanel>
+
+        <!-- 主卡片 -->
+        <StackPanel Grid.Row="1" Spacing="12">
+            <Border CornerRadius="12" BorderThickness="1"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}" 
+                    BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}" 
+                    Padding="16">
+                <Grid>
+                    <!-- ∞ 图标：接入电源但无电池 -->
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup x:Name="BatteryStates">
+                            <!-- 状态：无电池 -->
+                            <VisualState x:Name="State_OnAC_NoBattery">
+                                <VisualState.StateTriggers>
+                                    <StateTrigger IsActive="{x:Bind ViewModel.State_OnAC_NoBattery, Mode=OneWay}"/>
+                                </VisualState.StateTriggers>
+                                <VisualState.Setters>
+                                    <Setter Target="InfinityIcon.Visibility" Value="Visible"/>
+                                    <Setter Target="BatteryGroup.Visibility" Value="Collapsed"/>
+                                </VisualState.Setters>
+                            </VisualState>
+
+                            <!-- 状态：充电中 (专门用于启动动画) -->
+                            <VisualState x:Name="State_Charging">
+                                <VisualState.StateTriggers>
+                                    <StateTrigger IsActive="{x:Bind ViewModel.State_Charging, Mode=OneWay}"/>
+                                </VisualState.StateTriggers>
+                                <VisualState.Setters>
+                                    <!-- 强制确保充电相关元素可见 (双重保险) -->
+                                    <Setter Target="PercentText.Foreground" Value="White"/>
+                                </VisualState.Setters>
+                                <Storyboard>
+                                    <DoubleAnimation
+                                        Storyboard.TargetName="ShimmerTranslate"
+                                        Storyboard.TargetProperty="X"
+                                        From="-200" To="400"
+                                        Duration="0:0:2.5"
+                                        RepeatBehavior="Forever"/>
+                                </Storyboard>
+                            </VisualState>
+
+                            <!-- 其他状态无需额外动画，依靠绑定即可 -->
+                            <VisualState x:Name="State_Normal"/>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+
+                    <!-- ∞ 图标 -->
+                    <TextBlock x:Name="InfinityIcon"
+                               Text="∞" FontSize="96" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="Collapsed"/>
+
+                    <!-- 电池组件组 -->
+                    <Grid x:Name="BatteryGroup" Height="60" HorizontalAlignment="Stretch">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- 电池主体：胶囊形 -->
+                        <Border x:Name="Body"
+                                CornerRadius="30" BorderThickness="2"
+                                BorderBrush="{ThemeResource TextFillColorSecondaryBrush}" 
+                                Background="#10888888">
+
+                            <!-- 使用 Grid + CornerRadius 进行裁剪 (WinUI 3特性) -->
+                            <Grid CornerRadius="28">
+                                <!-- 1. 基础底色 (空电量背景) -->
+                                <Rectangle Fill="{ThemeResource TextFillColorTertiaryBrush}" Opacity="0.15"/>
+
+                                <!-- 2. 动态电量层容器 -->
+                                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                      RenderTransformOrigin="0,0.5">
+                                    <Grid.RenderTransform>
+                                        <ScaleTransform ScaleX="{x:Bind ViewModel.LevelRatio, Mode=OneWay}"/>
+                                    </Grid.RenderTransform>
+
+                                    <!-- 
+                                        关键修改：直接绑定 Visibility，不再依赖 VisualStateManager 
+                                    -->
+
+                                    <!-- 2a. 普通状态 (自适应黑/白) -->
+                                    <Rectangle x:Name="FillRectNormal"
+                                               Fill="{ThemeResource TextFillColorPrimaryBrush}"
+                                               Visibility="{x:Bind ViewModel.NormalVisibility, Mode=OneWay}"/>
+
+                                    <!-- 2b. 充电状态 (绿色) -->
+                                    <Rectangle x:Name="FillRectCharging"
+                                               Visibility="{x:Bind ViewModel.ChargingVisibility, Mode=OneWay}">
+                                        <Rectangle.Fill>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                <GradientStop Color="#2E7D32" Offset="0"/>
+                                                <!-- 深绿 -->
+                                                <GradientStop Color="#00E676" Offset="1"/>
+                                                <!-- 亮绿 -->
+                                            </LinearGradientBrush>
+                                        </Rectangle.Fill>
+                                    </Rectangle>
+                                </Grid>
+
+                                <!-- 3. [新特效] 阴影渐变覆盖层 (Shadow -> Highlight) -->
+                                <!-- 覆盖在所有颜色层之上，实现你要的质感 -->
+                                <Rectangle IsHitTestVisible="False">
+                                    <Rectangle.Fill>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <!-- 左侧：较明显的黑色阴影，营造厚度感 -->
+                                            <GradientStop Color="#50000000" Offset="0.0"/>
+                                            <GradientStop Color="#20000000" Offset="0.3"/>
+                                            <!-- 中间：透明 -->
+                                            <GradientStop Color="Transparent" Offset="0.5"/>
+                                            <!-- 右侧：逐渐变亮的高光 -->
+                                            <GradientStop Color="#10FFFFFF" Offset="0.7"/>
+                                            <GradientStop Color="#50FFFFFF" Offset="1.0"/>
+                                        </LinearGradientBrush>
+                                    </Rectangle.Fill>
+                                </Rectangle>
+
+                                <!-- 4. 流光特效 (仅充电时显示) -->
+                                <!-- 
+                                     增加 Visibility 绑定，确保只有充电时才有。
+                                     不透明度调高到 0.4，保证在绿色背景上清晰可见 
+                                -->
+                                <Rectangle x:Name="ShimmerRect" 
+                                           Width="150" Height="100"
+                                           HorizontalAlignment="Left"
+                                           Visibility="{x:Bind ViewModel.ChargingVisibility, Mode=OneWay}"
+                                           RenderTransformOrigin="0.5,0.5">
+                                    <Rectangle.Fill>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#00FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#60FFFFFF" Offset="0.5"/>
+                                            <!-- 强白光 -->
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Rectangle.Fill>
+                                    <Rectangle.RenderTransform>
+                                        <TransformGroup>
+                                            <SkewTransform AngleX="-20"/>
+                                            <TranslateTransform x:Name="ShimmerTranslate" X="-200"/>
+                                        </TransformGroup>
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+
+                                <!-- 5. 百分比文字 -->
+                                <TextBlock x:Name="PercentText"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           FontWeight="SemiBold" FontSize="20" 
+                                           Foreground="{ThemeResource TextFillColorInverseBrush}"
+                                           IsHitTestVisible="False">
+                                    <Run Text="{x:Bind ViewModel.Level, Mode=OneWay}"/>
+                                    <Run Text="%"/>
+                                </TextBlock>
+                            </Grid>
+                        </Border>
+
+                        <!-- 右侧闪电图标 -->
+                        <!-- 同样直接绑定 Visibility -->
+                        <TextBlock x:Name="PlugIcon"
+                                   Text="⚡" FontSize="28" FontWeight="Bold"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center"
+                                   Margin="0,0,16,0" 
+                                   Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                   Visibility="{x:Bind ViewModel.ChargingVisibility, Mode=OneWay}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- 底部信息 -->
+            <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}"
+                       FontSize="18" FontWeight="SemiBold"/>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <HyperlinkButton Content="电源和电池" Click="OpenSettings_Click"/>
+                <TextBlock Text="·" Margin="0,-4"/>
+                <Button Content="刷新" Click="Refresh_Click"/>
+            </StackPanel>
+
+            <Border CornerRadius="12" BorderThickness="1"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}" 
+                    BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}" 
+                    Padding="12">
+                <Grid ColumnSpacing="12" RowSpacing="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="是否接入电源"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind ViewModel.IsPluggedIn, Mode=OneWay}"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="是否有电池"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind ViewModel.HasBattery, Mode=OneWay}"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="是否充电中"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind ViewModel.IsCharging, Mode=OneWay}"/>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </Grid>
+</Page>

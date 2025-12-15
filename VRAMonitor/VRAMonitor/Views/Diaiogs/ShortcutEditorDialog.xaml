@@ -1,0 +1,122 @@
+<ContentDialog
+    x:Class="VRAMonitor.Views.Dialogs.ShortcutEditorDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="激活快捷键"
+    PrimaryButtonText="保存"
+    CloseButtonText="取消"
+    DefaultButton="Primary"
+    Style="{StaticResource DefaultContentDialogStyle}">
+
+    <ContentDialog.Resources>
+        <!-- 对话框内的按键背景样式 -->
+        <Style x:Key="DialogKeyVisualStyle" TargetType="Border">
+            <Setter Property="Background" Value="{ThemeResource SystemControlHighlightAccentBrush}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="MinWidth" Value="48"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <!-- 对话框内的按键文字样式 -->
+        <Style x:Key="DialogKeyTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorInverseBrush}"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+    </ContentDialog.Resources>
+
+    <Grid RowSpacing="16" KeyDown="OnContentKeyDown" KeyUp="OnContentKeyUp">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- 提示文本 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 按键显示区 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 错误提示区 (新增) -->
+            <RowDefinition Height="Auto"/>
+            <!-- 按钮行 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 底部说明 -->
+        </Grid.RowDefinitions>
+
+        <!-- Row 0: 提示文本 -->
+        <TextBlock Grid.Row="0" 
+                   Text="{x:Bind TextInstruction}" 
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" 
+                   FontSize="14"/>
+
+        <!-- Row 1: 按键显示区域 -->
+        <Border Grid.Row="1" 
+                Background="{ThemeResource SolidBackgroundFillColorTertiaryBrush}" 
+                CornerRadius="8" 
+                Height="120" 
+                Padding="16">
+
+            <StackPanel Orientation="Horizontal" 
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Center">
+
+                <!-- 空状态提示 -->
+                <TextBlock Text="{x:Bind TextWaiting}" 
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource TextFillColorDisabledBrush}"
+                           Visibility="{x:Bind IsWaitingForInput, Mode=OneWay}"/>
+
+                <!-- 动态生成的按键列表 -->
+                <ItemsControl ItemsSource="{x:Bind CurrentKeys, Mode=OneWay}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource DialogKeyVisualStyle}">
+                                <TextBlock Text="{Binding}" Style="{StaticResource DialogKeyTextStyle}"/>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- Row 2: 错误提示 (仿 PowerToys 样式) -->
+        <!-- 使用 InfoBar 显示错误，当 IsErrorVisible 为 True 时显示 -->
+        <InfoBar Grid.Row="2"
+                 IsOpen="{x:Bind IsErrorVisible, Mode=OneWay}"
+                 Severity="Error"
+                 Message="{x:Bind TextError}"
+                 IsClosable="False" />
+
+        <!-- Row 3: 操作按钮行：重置与清除 -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="16" HorizontalAlignment="Right">
+            <HyperlinkButton Click="OnResetClicked" ToolTipService.ToolTip="{x:Bind TextResetToolTip}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <FontIcon Glyph="&#xE777;" FontSize="14"/>
+                    <TextBlock Text="{x:Bind TextReset}"/>
+                </StackPanel>
+            </HyperlinkButton>
+
+            <HyperlinkButton Click="OnClearClicked" ToolTipService.ToolTip="{x:Bind TextClearToolTip}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <FontIcon Glyph="&#xE74D;" FontSize="14"/>
+                    <TextBlock Text="{x:Bind TextClear}"/>
+                </StackPanel>
+            </HyperlinkButton>
+        </StackPanel>
+
+        <!-- Row 4: 底部说明 -->
+        <TextBlock Grid.Row="4" 
+                   Text="{x:Bind TextDescription}" 
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" 
+                   FontSize="12" 
+                   TextWrapping="Wrap"/>
+    </Grid>
+</ContentDialog>

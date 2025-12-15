@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="VRAMonitor.Views.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:VRAMonitor.Views.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    xmlns:viewmodels="using:VRAMonitor.ViewModels.Pages"
+    xmlns:services="using:VRAMonitor.Services"
+    xmlns:win="using:Microsoft.UI.Xaml"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="LabTagBackgroundBrush" Color="#ffc225"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Default">
+                    <SolidColorBrush x:Key="LabTagBackgroundBrush" Color="#8f7135"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <local:StringFormatConverter x:Key="StringFormatConverter"/>
+
+            <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
+                <Setter Property="Style" Value="{ThemeResource BodyStrongTextBlockStyle}"/>
+                <Setter Property="Margin" Value="4,0,0,8"/>
+            </Style>
+
+            <Style x:Key="PowerToysKeyStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource ControlFillColorDefaultBrush}"/>
+                <Setter Property="BorderBrush" Value="{ThemeResource ControlStrokeColorDefaultBrush}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="4"/>
+                <Setter Property="Padding" Value="8,2"/>
+                <Setter Property="MinWidth" Value="24"/>
+                <Setter Property="MinHeight" Value="24"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Margin" Value="0,0,4,0"/>
+            </Style>
+
+            <Style x:Key="PowerToysKeyTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}"/>
+            </Style>
+
+            <Style x:Key="ShortcutButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="4"/>
+                <Setter Property="CornerRadius" Value="4"/>
+            </Style>
+        </ResourceDictionary>
+    </Page.Resources>
+
+    <ScrollViewer Padding="36,24,36,36">
+        <StackPanel Spacing="24" HorizontalAlignment="Stretch">
+
+            <!-- 页面标题 -->
+            <TextBlock x:Uid="SettingsTitle" Style="{ThemeResource TitleTextBlockStyle}" Margin="4,0,0,0"/>
+
+            <!-- 1. 通用 -->
+            <StackPanel>
+                <TextBlock x:Uid="SettingsSectionGeneral" Style="{StaticResource SectionHeaderStyle}"/>
+                <StackPanel Spacing="4">
+
+                    <!-- 开机自启 -->
+                    <toolkit:SettingsCard x:Uid="SettingsStartOnBoot">
+                        <toolkit:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE7B5;" />
+                        </toolkit:SettingsCard.HeaderIcon>
+                        <ToggleSwitch IsOn="{x:Bind ViewModel.IsStartOnBoot, Mode=TwoWay}" />
+                    </toolkit:SettingsCard>
+
+                    <!-- 语言 -->
+                    <toolkit:SettingsCard x:Uid="SettingsLanguage">
+                        <toolkit:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xF2B7;" />
+                        </toolkit:SettingsCard.HeaderIcon>
+                        <ComboBox ItemsSource="{x:Bind ViewModel.AvailableLanguages, Mode=OneWay}"
+                                  SelectedItem="{x:Bind ViewModel.SelectedLanguage, Mode=TwoWay}"
+                                  DisplayMemberPath="Name"
+                                  MinWidth="140"/>
+                    </toolkit:SettingsCard>
+
+                    <!-- 关闭动作 -->
+                    <toolkit:SettingsCard x:Uid="SettingsCloseAction">
+                        <toolkit:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE711;" />
+                        </toolkit:SettingsCard.HeaderIcon>
+                        <ComboBox ItemsSource="{x:Bind ViewModel.AvailableCloseActions, Mode=OneWay}"
+                                  SelectedItem="{x:Bind ViewModel.SelectedCloseAction, Mode=TwoWay}"
+                                  DisplayMemberPath="Name"
+                                  MinWidth="140"/>
+                    </toolkit:SettingsCard>
+
+                    <!-- 窗口置顶 -->
+                    <toolkit:SettingsExpander x:Uid="SettingsTopMost" IsExpanded="True">
+                        <toolkit:SettingsExpander.HeaderIcon>
+                            <FontIcon Glyph="&#xE718;" />
+                        </toolkit:SettingsExpander.HeaderIcon>
+
+                        <toolkit:SettingsExpander.Items>
+                            <toolkit:SettingsCard x:Uid="SettingsTopMostLearnMore"
+                                                  IsClickEnabled="True"
+                                                  Click="OnWindowTopMostCardClicked">
+                                <toolkit:SettingsCard.HeaderIcon>
+                                    <FontIcon Glyph="&#xE897;" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                </toolkit:SettingsCard.HeaderIcon>
+                                <toolkit:SettingsCard.ActionIcon>
+                                    <FontIcon Glyph="&#xE8A7;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                </toolkit:SettingsCard.ActionIcon>
+                            </toolkit:SettingsCard>
+
+                            <toolkit:SettingsCard x:Uid="SettingsTopMostLaunchPowerToys"
+                                                  IsClickEnabled="True"
+                                                  Click="OnOpenPowerToysClicked">
+                                <toolkit:SettingsCard.HeaderIcon>
+                                    <FontIcon Glyph="&#xEBE7;" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                </toolkit:SettingsCard.HeaderIcon>
+                                <toolkit:SettingsCard.ActionIcon>
+                                    <FontIcon Glyph="&#xE8A7;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                </toolkit:SettingsCard.ActionIcon>
+                            </toolkit:SettingsCard>
+                        </toolkit:SettingsExpander.Items>
+                    </toolkit:SettingsExpander>
+
+                </StackPanel>
+            </StackPanel>
+
+            <!-- 2. 功能 -->
+            <StackPanel>
+                <TextBlock x:Uid="SettingsSectionFunctions" Style="{StaticResource SectionHeaderStyle}"/>
+                <StackPanel Spacing="4">
+                    <!-- 进程扫描间隔 -->
+                    <toolkit:SettingsExpander x:Uid="SettingsScanInterval" IsExpanded="True">
+                        <toolkit:SettingsExpander.HeaderIcon>
+                            <FontIcon Glyph="&#xE916;" />
+                        </toolkit:SettingsExpander.HeaderIcon>
+                        <!-- [修改] 绑定到 ViewModel.ScanIntervalStatusText -->
+                        <TextBlock Text="{x:Bind ViewModel.ScanIntervalStatusText, Mode=OneWay}" 
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   VerticalAlignment="Center"/>
+                        <toolkit:SettingsExpander.Items>
+                            <toolkit:SettingsCard HorizontalContentAlignment="Stretch">
+                                <!-- [修改] Slider 范围修改为 0-10 -->
+                                <Slider Value="{x:Bind ViewModel.ScanInterval, Mode=TwoWay}" 
+                                        Minimum="0" Maximum="10.0" StepFrequency="0.5" 
+                                        TickFrequency="0.5" TickPlacement="Outside"/>
+                            </toolkit:SettingsCard>
+                        </toolkit:SettingsExpander.Items>
+                    </toolkit:SettingsExpander>
+
+                    <!-- 显示列表选中指示器 -->
+                    <toolkit:SettingsCard x:Uid="SettingsShowSelectionPill">
+                        <toolkit:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE76C;" />
+                        </toolkit:SettingsCard.HeaderIcon>
+                        <ToggleSwitch IsOn="{x:Bind ViewModel.IsSelectionPillVisible, Mode=TwoWay}" />
+                    </toolkit:SettingsCard>
+
+                </StackPanel>
+            </StackPanel>
+
+            <!-- 3. 主题 -->
+            <StackPanel>
+                <TextBlock x:Uid="SettingsSectionTheme" Style="{StaticResource SectionHeaderStyle}"/>
+                <StackPanel Spacing="4">
+                    <!-- 主题颜色 -->
+                    <toolkit:SettingsCard x:Uid="SettingsTheme">
+                        <toolkit:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE790;" />
+                        </toolkit:SettingsCard.HeaderIcon>
+                        <ComboBox ItemsSource="{x:Bind ViewModel.AvailableThemes, Mode=OneWay}"
+                                  SelectedItem="{x:Bind ViewModel.SelectedTheme, Mode=TwoWay}"
+                                  DisplayMemberPath="Name"
+                                  MinWidth="140"/>
+                    </toolkit:SettingsCard>
+
+                    <!-- 窗口材质 -->
+                    <toolkit:SettingsCard x:Uid="SettingsMaterial">
+                        <toolkit:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE744;" />
+                        </toolkit:SettingsCard.HeaderIcon>
+                        <ComboBox ItemsSource="{x:Bind ViewModel.AvailableMaterials, Mode=OneWay}"
+                                  SelectedItem="{x:Bind ViewModel.SelectedMaterial, Mode=TwoWay}"
+                                  DisplayMemberPath="Name"
+                                  MinWidth="140"/>
+                    </toolkit:SettingsCard>
+
+                    <!-- 布局样式 -->
+                    <toolkit:SettingsCard x:Uid="SettingsLayout">
+                        <toolkit:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE746;" />
+                        </toolkit:SettingsCard.HeaderIcon>
+
+                        <ComboBox ItemsSource="{x:Bind ViewModel.AvailableLayoutModes, Mode=OneWay}"
+                                  SelectedItem="{x:Bind ViewModel.SelectedLayoutMode, Mode=TwoWay}"
+                                  MinWidth="160">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="viewmodels:LayoutModeOption">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center"/>
+                                        <Border Visibility="{x:Bind IsLab}" 
+                                                Background="{ThemeResource LabTagBackgroundBrush}" 
+                                                CornerRadius="4" 
+                                                VerticalAlignment="Center" 
+                                                Padding="4,0" 
+                                                Margin="0,1,0,0">
+                                            <TextBlock Text="LAB" FontSize="10" FontWeight="Bold" 
+                                                       Foreground="{ThemeResource TextFillColorPrimaryBrush}" 
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </toolkit:SettingsCard>
+
+                    <!-- 字体 -->
+                    <toolkit:SettingsCard x:Uid="SettingsFont">
+                        <toolkit:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE8D2;" />
+                        </toolkit:SettingsCard.HeaderIcon>
+                        <ComboBox ItemsSource="{x:Bind ViewModel.AvailableFonts, Mode=OneWay}"
+                                  SelectedItem="{x:Bind ViewModel.SelectedFont, Mode=TwoWay}" 
+                                  DisplayMemberPath="Name"
+                                  MinWidth="140"/>
+                    </toolkit:SettingsCard>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- 4. 快捷键 -->
+            <StackPanel>
+                <TextBlock x:Uid="SettingsSectionShortcuts" Style="{StaticResource SectionHeaderStyle}"/>
+                <StackPanel Spacing="4">
+                    <toolkit:SettingsCard x:Uid="SettingsTrayShortcut">
+                        <toolkit:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE765;" />
+                        </toolkit:SettingsCard.HeaderIcon>
+
+                        <Button Click="OnEditShortcutClicked" Style="{StaticResource ShortcutButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <ItemsControl ItemsSource="{x:Bind ViewModel.ShortcutDisplayKeys, Mode=OneWay}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource PowerToysKeyStyle}">
+                                                <TextBlock Text="{Binding}" Style="{StaticResource PowerToysKeyTextStyle}"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <FontIcon Glyph="&#xE70F;" FontSize="12" 
+                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                          VerticalAlignment="Center" Margin="4,0,0,0"/>
+                            </StackPanel>
+                        </Button>
+                    </toolkit:SettingsCard>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- 5. 高级 -->
+            <StackPanel>
+                <TextBlock x:Uid="SettingsSectionAdvanced" Style="{StaticResource SectionHeaderStyle}"/>
+                <StackPanel Spacing="4">
+                    <toolkit:SettingsCard x:Uid="SettingsJsonConfig">
+                        <toolkit:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE943;" />
+                        </toolkit:SettingsCard.HeaderIcon>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Uid="SettingsBtnOpenFolder" Click="OnOpenSettingsFolderClicked"/>
+                            <Button x:Uid="SettingsBtnExport" Click="OnExportSettingsClicked"/>
+                        </StackPanel>
+                    </toolkit:SettingsCard>
+
+                    <toolkit:SettingsCard x:Uid="SettingsReset">
+                        <toolkit:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE777;" />
+                        </toolkit:SettingsCard.HeaderIcon>
+                        <Button x:Uid="SettingsBtnReset" Style="{StaticResource AccentButtonStyle}" Click="OnResetSettingsClicked"/>
+                    </toolkit:SettingsCard>
+                </StackPanel>
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>
