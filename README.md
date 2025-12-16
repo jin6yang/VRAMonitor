@@ -65,11 +65,11 @@ VRAMonitor
 
 ## 屏幕截图
 
-![](Screenshots\1.png)
+![](Screenshots/1.png)
 
-![](Screenshots\2.png)
+![](Screenshots/2.png)
 
-![](Screenshots\3.png)
+![](Screenshots/3.png)
 
 
 
@@ -143,7 +143,7 @@ certmgr.msc
 
 ## 许可证
 
-![](VRAMonitor\VRAMonitor\Assets\gplv3-127x51.png)
+![](VRAMonitor/VRAMonitor/Assets/gplv3-127x51.png)
 
 
 
