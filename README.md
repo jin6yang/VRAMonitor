@@ -75,7 +75,11 @@ VRAMonitor
 
 ## 更新路线
 
-暂无
+- 修复部分bug
+- 制作看板页面
+- 兼容 AMD GPU (使用ADLX)
+- 兼容 Intel GPU (使用Intel(R) Metrics Discovery API)
+- 兼容 Moore Threads GPU (使用WDDM)
 
 
 
@@ -91,6 +95,7 @@ VRAMonitor
   - Blur
   - None
 - 托盘菜单在第一次显示时，长度过短可能会遮住部分字，此为第三方库的问题
+- 标注为 “**LAB**” 的选项可能不稳定，可能会造成意想不到的后果
 
 
 

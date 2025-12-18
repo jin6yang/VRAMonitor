@@ -43,7 +43,7 @@ namespace VRAMonitor.Views.Dialogs
         private readonly VirtualKeyModifiers _defaultModifiers;
         private readonly VirtualKey _defaultKey;
 
-        // [新增] 本地化文本属性供 XAML 绑定 (x:Bind 默认为 OneTime，这里足够了)
+        // 本地化文本属性供 XAML 绑定
         public string TextInstruction { get; private set; }
         public string TextWaiting { get; private set; }
         public string TextError { get; private set; }

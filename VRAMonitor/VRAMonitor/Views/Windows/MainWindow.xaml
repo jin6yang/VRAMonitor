@@ -167,7 +167,6 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- [修改] 同样改为绝对居中布局 -->
             <Grid x:Name="OnlyTopAppTitleBar" 
                   Grid.Row="0"
                   Height="48" 
@@ -264,7 +263,7 @@
         </Grid>
 
         <!-- 
-            布局 3: Only Left 样式 (保持不变)
+            布局 3: Only Left 样式
         -->
         <Grid x:Name="OnlyLeftStyleLayout" Visibility="{x:Bind ViewModel.OnlyLeftStyleVisibility, Mode=OneWay}">
             <Grid x:Name="CustomTitleBar" Height="48" VerticalAlignment="Top" Background="Transparent" Canvas.ZIndex="0" />
