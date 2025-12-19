@@ -1,211 +1,88 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.UI.Xaml;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
-using VRAMonitor.Models;
-using VRAMonitor.Nvidia;
+using System.Linq;
+using System.Threading.Tasks;
 using VRAMonitor.Helpers;
+using VRAMonitor.Models;
 using VRAMonitor.Services;
+using VRAMonitor.Services.Providers;
 using Windows.ApplicationModel.Resources;
 
 namespace VRAMonitor.ViewModels.Pages
 {
     public partial class ProcessesPageViewModel : ObservableObject
     {
-        // [新增] 引入 ResourceLoader
         private readonly ResourceLoader _resourceLoader;
+        private readonly DispatcherQueue _dispatcherQueue;
+        private DispatcherTimer _timer;
+        private IGpuTelemetryProvider _gpuProvider;
 
-        [ObservableProperty]
-        private string _gpuName = "正在检测...";
+        private bool _isInitialized;
+        private readonly Dictionary<uint, ProcessInfoHelper.ProcessMetadata> _metadataCache = new();
+        private DateTime _lastUpdateTime = DateTime.MinValue;
 
-        [ObservableProperty]
-        private string _totalVramStatus = "正在获取显存信息...";
-
-        [ObservableProperty]
-        private string _statusMessage = "准备就绪";
-
-        [ObservableProperty]
-        private GpuProcess _selectedProcess;
-
-        [ObservableProperty]
-        private bool _isGrouped = false;
-
-        [ObservableProperty]
-        private string _filterText = "";
+        [ObservableProperty] private string _gpuName = "正在检测...";
+        [ObservableProperty] private string _totalVramStatus = "正在初始化...";
+        [ObservableProperty] private string _statusMessage = "准备就绪";
+        [ObservableProperty] private GpuProcess _selectedProcess;
+        [ObservableProperty] private bool _isGrouped = false;
+        [ObservableProperty] private string _filterText = "";
 
         public ObservableCollection<GpuProcess> FilteredProcesses { get; } = new();
-
         public ObservableCollection<GroupInfoList> GroupedProcesses { get; private set; } = new();
 
+        // 维护一个全量列表，用于过滤和搜索
         private readonly List<GpuProcess> _allProcesses = new();
 
         public ObservableCollection<GpuProcess> Processes => FilteredProcesses;
-
-        private readonly DispatcherQueue _dispatcherQueue;
-        private DispatcherTimer _timer;
-        private List<(int Index, IntPtr Handle, string Name)> _gpuDevices = new();
-        private bool _isInitialized;
-        private GpuMemoryCounterHelper _perfHelper;
-        private readonly Dictionary<uint, ProcessInfoHelper.ProcessMetadata> _metadataCache = new();
-
-        // 记录最后一次更新时间，用于状态栏显示
-        private DateTime _lastUpdateTime = DateTime.MinValue;
 
         public event EventHandler GroupingChanged;
 
         public ProcessesPageViewModel()
         {
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
-            _perfHelper = new GpuMemoryCounterHelper();
             try { _resourceLoader = new ResourceLoader(); } catch { }
-        }
-
-        [RelayCommand]
-        private void ToggleGrouping()
-        {
-            IsGrouped = !IsGrouped;
-            RefreshDisplay();
-            GroupingChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        partial void OnFilterTextChanged(string value)
-        {
-            RefreshDisplay();
-        }
-
-        private void RefreshDisplay()
-        {
-            IEnumerable<GpuProcess> query = _allProcesses;
-
-            if (!string.IsNullOrWhiteSpace(FilterText))
-            {
-                string lowerFilter = FilterText.Trim().ToLower();
-                query = query.Where(p =>
-                    (p.Name != null && p.Name.ToLower().Contains(lowerFilter)) ||
-                    p.Pid.ToString().Contains(lowerFilter) ||
-                    (p.Publisher != null && p.Publisher.ToLower().Contains(lowerFilter))
-                );
-            }
-
-            var filteredList = query.ToList();
-            SyncObservableCollection(FilteredProcesses, filteredList);
-
-            if (IsGrouped)
-            {
-                RefreshGrouping(filteredList);
-            }
-        }
-
-        private void SyncObservableCollection(ObservableCollection<GpuProcess> target, List<GpuProcess> source)
-        {
-            var sourcePids = new HashSet<uint>(source.Select(p => p.Pid));
-            for (int i = target.Count - 1; i >= 0; i--)
-            {
-                if (!sourcePids.Contains(target[i].Pid))
-                {
-                    target.RemoveAt(i);
-                }
-            }
-
-            for (int i = 0; i < source.Count; i++)
-            {
-                var sourceItem = source[i];
-                if (i < target.Count && target[i].Pid == sourceItem.Pid) continue;
-
-                int existingIndex = -1;
-                for (int j = i + 1; j < target.Count; j++)
-                {
-                    if (target[j].Pid == sourceItem.Pid)
-                    {
-                        existingIndex = j;
-                        break;
-                    }
-                }
-
-                if (existingIndex >= 0) target.Move(existingIndex, i);
-                else target.Insert(i, sourceItem);
-            }
-        }
-
-        public void RefreshGrouping(List<GpuProcess> sourceList)
-        {
-            var query = from item in sourceList
-                        group item by GetGroupKey(item.Name) into g
-                        orderby g.Key
-                        select new GroupInfoList(g) { Key = g.Key };
-
-            GroupedProcesses.Clear();
-            foreach (var g in query)
-            {
-                GroupedProcesses.Add(g);
-            }
-        }
-
-        public void RefreshGrouping()
-        {
-            RefreshDisplay();
-        }
-
-        private string GetGroupKey(string name)
-        {
-            if (string.IsNullOrEmpty(name)) return "#";
-            var firstChar = name.Substring(0, 1).ToUpper();
-            if (char.IsLetter(firstChar[0])) return firstChar;
-            return "#";
         }
 
         public void Initialize()
         {
             if (_isInitialized) return;
 
-            var result = NvmlApi.Init();
-            if (result != NvmlApi.NvmlReturn.Success)
+            // 1. 尝试 NVIDIA NVML
+            var nvProvider = new NvidiaTelemetryProvider();
+            if (nvProvider.IsSupported)
             {
-                StatusMessage = $"NVML 初始化失败: {result}";
-                return;
+                _gpuProvider = nvProvider;
             }
-
-            uint deviceCount = 0;
-            NvmlApi.DeviceGetCount(ref deviceCount);
-            if (deviceCount == 0)
+            else
             {
-                StatusMessage = "未找到 NVIDIA GPU 设备。";
-                NvmlApi.Shutdown();
-                return;
-            }
-
-            _gpuDevices.Clear();
-            var allNamesBuilder = new StringBuilder();
-            var nameBuffer = new StringBuilder(256);
-
-            for (uint i = 0; i < deviceCount; i++)
-            {
-                if (NvmlApi.DeviceGetHandleByIndex(i, out IntPtr handle) == NvmlApi.NvmlReturn.Success)
+                nvProvider.Dispose();
+                // 2. 降级到 WDDM (通用)
+                var wddmProvider = new WddmTelemetryProvider();
+                if (wddmProvider.IsSupported)
                 {
-                    NvmlApi.DeviceGetName(handle, nameBuffer, (uint)nameBuffer.Capacity);
-                    string deviceName = nameBuffer.ToString();
-                    string displayName = $"GPU {i}: {deviceName}";
-                    _gpuDevices.Add(((int)i, handle, deviceName));
-
-                    if (allNamesBuilder.Length > 0) allNamesBuilder.Append(" | ");
-                    allNamesBuilder.Append(displayName);
+                    _gpuProvider = wddmProvider;
+                }
+                else
+                {
+                    StatusMessage = "错误: 您的系统不支持 GPU 性能计数器。";
+                    GpuName = "硬件不受支持";
+                    return;
                 }
             }
 
-            GpuName = allNamesBuilder.ToString();
+            GpuName = _gpuProvider.GetGpuName();
+            UpdateStatusMessage(); // 初始状态显示
 
             _timer = new DispatcherTimer();
             _timer.Tick += (s, e) => UpdateVramUsage();
-
             SettingsManager.ScanIntervalChanged += OnScanIntervalChanged;
-
             UpdateTimerState(SettingsManager.ScanInterval);
 
             if (_timer.IsEnabled) UpdateVramUsage();
@@ -213,164 +90,38 @@ namespace VRAMonitor.ViewModels.Pages
             _isInitialized = true;
         }
 
-        private void OnScanIntervalChanged(object sender, double interval)
-        {
-            _dispatcherQueue.TryEnqueue(() =>
-            {
-                UpdateTimerState(interval);
-                // 设置改变时，也刷新一下状态栏文案（为了显示新的间隔秒数或“已停止”）
-                UpdateStatusMessage();
-            });
-        }
-
-        private void UpdateTimerState(double interval)
-        {
-            if (interval <= 0)
-            {
-                _timer.Stop();
-            }
-            else
-            {
-                _timer.Interval = TimeSpan.FromSeconds(interval);
-                if (!_timer.IsEnabled)
-                {
-                    _timer.Start();
-                    UpdateVramUsage();
-                }
-            }
-        }
-
-        // [新增] 统一状态消息构建逻辑
-        private void UpdateStatusMessage()
-        {
-            if (_resourceLoader == null) return;
-
-            string statusFormat = _resourceLoader.GetString("StatusBar_Format");
-            // 格式示例: "最后更新于: {0} | 监控 {1} 个 GPU | {2}"
-            // 参数 0: 时间
-            // 参数 1: GPU 数量
-            // 参数 2: 刷新间隔描述
-
-            string intervalDesc;
-            double currentInterval = SettingsManager.ScanInterval;
-
-            if (currentInterval <= 0)
-            {
-                intervalDesc = _resourceLoader.GetString("StatusBar_Stopped"); // "已停止监控"
-            }
-            else
-            {
-                string refreshFormat = _resourceLoader.GetString("StatusBar_RefreshRate"); // "每 {0:F1} 秒刷新"
-                intervalDesc = string.Format(refreshFormat, currentInterval);
-            }
-
-            // 如果从未更新过，用 "N/A" 或当前时间占位
-            string timeStr = _lastUpdateTime == DateTime.MinValue
-                ? "N/A"
-                : _lastUpdateTime.ToString("HH:mm:ss");
-
-            try
-            {
-                StatusMessage = string.Format(statusFormat, timeStr, _gpuDevices.Count, intervalDesc);
-            }
-            catch
-            {
-                // Fallback
-                StatusMessage = $"{timeStr} | {_gpuDevices.Count} GPUs | {intervalDesc}";
-            }
-        }
-
         private async void UpdateVramUsage()
         {
+            if (_gpuProvider == null) return;
+
             try
             {
-                _perfHelper.Refresh();
-
-                // 更新时间戳
+                _gpuProvider.Refresh();
                 _lastUpdateTime = DateTime.Now;
 
-                var pidDataMap = new Dictionary<uint, (ulong TotalVram, HashSet<string> EngineStrings, bool UsedPerfCounter)>();
-                var statusBuilder = new StringBuilder();
+                string status = _gpuProvider.GetTotalVramStatus();
+                _dispatcherQueue.TryEnqueue(() => TotalVramStatus = status);
 
-                foreach (var (index, handle, gpuName) in _gpuDevices)
-                {
-                    NvmlApi.NvmlMemory memoryInfo;
-                    if (NvmlApi.DeviceGetMemoryInfo(handle, out memoryInfo) == NvmlApi.NvmlReturn.Success)
-                    {
-                        double totalGB = memoryInfo.total / 1024.0 / 1024.0 / 1024.0;
-                        double usedGB = memoryInfo.used / 1024.0 / 1024.0 / 1024.0;
-                        double percent = (double)memoryInfo.used / memoryInfo.total * 100.0;
+                // 获取数据字典: PID -> (VRAM, EngineString)
+                var usageMap = await Task.Run(() => _gpuProvider.GetProcessVramUsage());
 
-                        if (statusBuilder.Length > 0) statusBuilder.Append("   |   ");
-                        statusBuilder.Append($"[GPU {index}] {percent:F1}% ({usedGB:F2} / {totalGB:F2} GB)");
-                    }
-
-                    uint processCount = 0;
-                    var result = NvmlApi.DeviceGetGraphicsRunningProcesses(handle, ref processCount, null);
-
-                    if (result == NvmlApi.NvmlReturn.Success || result == NvmlApi.NvmlReturn.ErrorInsufficientSize)
-                    {
-                        if (processCount > 0)
-                        {
-                            var processInfos = new NvmlApi.NvmlProcessInfo[processCount];
-                            if (NvmlApi.DeviceGetGraphicsRunningProcesses(handle, ref processCount, processInfos) == NvmlApi.NvmlReturn.Success)
-                            {
-                                foreach (var info in processInfos)
-                                {
-                                    if (!pidDataMap.ContainsKey(info.pid))
-                                    {
-                                        pidDataMap[info.pid] = (0, new HashSet<string>(), false);
-                                    }
-
-                                    var entry = pidDataMap[info.pid];
-                                    entry.EngineStrings.Add($"GPU {index} - 3D");
-
-                                    if (info.usedGpuMemory != NvmlApi.NVML_VALUE_NOT_AVAILABLE && info.usedGpuMemory > 0)
-                                    {
-                                        entry.TotalVram += info.usedGpuMemory;
-                                    }
-                                    else
-                                    {
-                                        entry.UsedPerfCounter = true;
-                                    }
-
-                                    pidDataMap[info.pid] = entry;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                _dispatcherQueue.TryEnqueue(() =>
-                {
-                    TotalVramStatus = statusBuilder.ToString();
-                });
-
-                var newProcessList = new List<GpuProcess>();
-
-                if (pidDataMap.Count == 0)
+                if (usageMap.Count == 0)
                 {
                     _dispatcherQueue.TryEnqueue(() =>
                     {
                         _allProcesses.Clear();
                         RefreshDisplay();
-                        // [修改] 如果列表为空，依然要更新底部的状态栏时间
                         UpdateStatusMessage();
                     });
                     return;
                 }
 
-                foreach (var kvp in pidDataMap)
+                var newProcessList = new List<GpuProcess>();
+
+                foreach (var kvp in usageMap)
                 {
                     uint pid = kvp.Key;
-                    var (totalVram, engines, needPerfCounter) = kvp.Value;
-
-                    if (needPerfCounter || totalVram == 0)
-                    {
-                        ulong perfValue = _perfHelper.GetDedicatedVramUsage(pid);
-                        if (perfValue > 0) totalVram = perfValue;
-                        else if (totalVram == 0 && needPerfCounter) totalVram = NvmlApi.NVML_VALUE_NOT_AVAILABLE;
-                    }
+                    var (vram, engineStr) = kvp.Value;
 
                     bool isEfficiency = false;
                     try
@@ -383,9 +134,10 @@ namespace VRAMonitor.ViewModels.Pages
                     var gpuProc = new GpuProcess
                     {
                         Pid = pid,
-                        VramUsageBytes = totalVram,
+                        VramUsageBytes = vram,
                         IsEfficiencyMode = isEfficiency,
-                        GpuEngine = string.Join(", ", engines)
+                        // [恢复] 使用 Provider 返回的具体引擎字符串 (如 "GPU 0 - 3D")
+                        GpuEngine = engineStr
                     };
 
                     if (_metadataCache.TryGetValue(pid, out var cachedMeta))
@@ -407,13 +159,12 @@ namespace VRAMonitor.ViewModels.Pages
                 _dispatcherQueue.TryEnqueue(() =>
                 {
                     MergeProcessData(newProcessList);
-                    // [修改] 更新状态栏
                     UpdateStatusMessage();
                 });
             }
             catch (Exception ex)
             {
-                StatusMessage = $"发生错误: {ex.Message}";
+                StatusMessage = $"更新失败: {ex.Message}";
             }
         }
 
@@ -422,8 +173,7 @@ namespace VRAMonitor.ViewModels.Pages
             var meta = await ProcessInfoHelper.GetMetadataAsync(pid);
             lock (_metadataCache)
             {
-                if (!_metadataCache.ContainsKey(pid))
-                    _metadataCache[pid] = meta;
+                if (!_metadataCache.ContainsKey(pid)) _metadataCache[pid] = meta;
             }
             _dispatcherQueue.TryEnqueue(() =>
             {
@@ -434,7 +184,7 @@ namespace VRAMonitor.ViewModels.Pages
                     proc.Icon = meta.Icon;
                     proc.FullPath = meta.FullPath;
                     proc.Publisher = meta.Publisher;
-
+                    // 元数据加载完毕后，也需要通过 RefreshDisplay 智能更新
                     RefreshDisplay();
                 }
             });
@@ -445,38 +195,38 @@ namespace VRAMonitor.ViewModels.Pages
             var orderedNew = newProcesses.OrderByDescending(p => p.VramUsageBytes).ToList();
             bool listChanged = false;
 
-            var pidsToRemove = _allProcesses.Select(p => p.Pid)
-                                            .Except(orderedNew.Select(p => p.Pid))
-                                            .ToList();
+            // 1. 标记删除
+            var pidsToRemove = _allProcesses.Select(p => p.Pid).Except(orderedNew.Select(p => p.Pid)).ToList();
             if (pidsToRemove.Count > 0) listChanged = true;
 
             foreach (var pid in pidsToRemove)
             {
-                var processToRemove = _allProcesses.FirstOrDefault(p => p.Pid == pid);
-                if (processToRemove != null)
+                var target = _allProcesses.FirstOrDefault(p => p.Pid == pid);
+                if (target != null)
                 {
-                    _allProcesses.Remove(processToRemove);
+                    _allProcesses.Remove(target);
                     lock (_metadataCache) { _metadataCache.Remove(pid); }
                 }
             }
 
+            // 2. 更新或添加
             foreach (var newProc in orderedNew)
             {
-                var existingProc = _allProcesses.FirstOrDefault(p => p.Pid == newProc.Pid);
-                if (existingProc != null)
+                var existing = _allProcesses.FirstOrDefault(p => p.Pid == newProc.Pid);
+                if (existing != null)
                 {
-                    existingProc.VramUsageBytes = newProc.VramUsageBytes;
-                    existingProc.IsEfficiencyMode = newProc.IsEfficiencyMode;
-                    existingProc.GpuEngine = newProc.GpuEngine;
+                    // 更新现有数据
+                    existing.VramUsageBytes = newProc.VramUsageBytes;
+                    existing.IsEfficiencyMode = newProc.IsEfficiencyMode;
+                    existing.GpuEngine = newProc.GpuEngine;
 
                     if (!newProc.Name.Contains("(加载中...)"))
                     {
-                        if (existingProc.Name != newProc.Name) listChanged = true;
-
-                        existingProc.Name = newProc.Name;
-                        existingProc.Icon = newProc.Icon;
-                        existingProc.FullPath = newProc.FullPath;
-                        existingProc.Publisher = newProc.Publisher;
+                        if (existing.Name != newProc.Name) listChanged = true;
+                        existing.Name = newProc.Name;
+                        existing.Icon = newProc.Icon;
+                        existing.FullPath = newProc.FullPath;
+                        existing.Publisher = newProc.Publisher;
                     }
                 }
                 else
@@ -486,19 +236,156 @@ namespace VRAMonitor.ViewModels.Pages
                 }
             }
 
+            // 调用刷新，这里会触发 SyncObservableCollection
             RefreshDisplay();
+        }
+
+        // [恢复] 原汁原味的 SyncObservableCollection 逻辑，防止 UI 闪烁
+        private void SyncObservableCollection(ObservableCollection<GpuProcess> target, List<GpuProcess> source)
+        {
+            var sourcePids = new HashSet<uint>(source.Select(p => p.Pid));
+
+            // 1. 删除
+            for (int i = target.Count - 1; i >= 0; i--)
+            {
+                if (!sourcePids.Contains(target[i].Pid))
+                {
+                    target.RemoveAt(i);
+                }
+            }
+
+            // 2. 插入或移动
+            for (int i = 0; i < source.Count; i++)
+            {
+                var sourceItem = source[i];
+                if (i < target.Count && target[i].Pid == sourceItem.Pid) continue;
+
+                int existingIndex = -1;
+                for (int j = i + 1; j < target.Count; j++)
+                {
+                    if (target[j].Pid == sourceItem.Pid)
+                    {
+                        existingIndex = j;
+                        break;
+                    }
+                }
+
+                if (existingIndex >= 0) target.Move(existingIndex, i);
+                else target.Insert(i, sourceItem);
+            }
+        }
+
+        private void RefreshDisplay()
+        {
+            IEnumerable<GpuProcess> query = _allProcesses;
+            if (!string.IsNullOrWhiteSpace(FilterText))
+            {
+                string lower = FilterText.Trim().ToLower();
+                query = query.Where(p =>
+                    (p.Name != null && p.Name.ToLower().Contains(lower)) ||
+                    p.Pid.ToString().Contains(lower) ||
+                    (p.Publisher != null && p.Publisher.ToLower().Contains(lower))
+                );
+            }
+
+            var filteredList = query.ToList();
+
+            // [恢复] 使用 Sync 方法而不是 Clear/Add
+            SyncObservableCollection(FilteredProcesses, filteredList);
+
+            if (IsGrouped) RefreshGrouping(filteredList);
+        }
+
+        private void RefreshGrouping(List<GpuProcess> sourceList)
+        {
+            var query = from item in sourceList
+                        group item by GetGroupKey(item.Name) into g
+                        orderby g.Key
+                        select new GroupInfoList(g) { Key = g.Key };
+
+            GroupedProcesses.Clear();
+            foreach (var g in query) GroupedProcesses.Add(g);
+        }
+
+        private string GetGroupKey(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return "#";
+            var c = name.Substring(0, 1).ToUpper();
+            return char.IsLetter(c[0]) ? c : "#";
+        }
+
+        private void OnScanIntervalChanged(object sender, double interval)
+        {
+            _dispatcherQueue.TryEnqueue(() =>
+            {
+                UpdateTimerState(interval);
+                UpdateStatusMessage();
+            });
+        }
+
+        private void UpdateTimerState(double interval)
+        {
+            if (interval <= 0) _timer.Stop();
+            else
+            {
+                _timer.Interval = TimeSpan.FromSeconds(interval);
+                if (!_timer.IsEnabled) { _timer.Start(); UpdateVramUsage(); }
+            }
+        }
+
+        // [恢复] 完整的状态栏多语言逻辑
+        private void UpdateStatusMessage()
+        {
+            if (_resourceLoader == null) return;
+
+            string statusFormat = _resourceLoader.GetString("StatusBar_Format");
+            // "最后更新于: {0} | 监控 {1} 个 GPU | {2}"
+
+            string intervalDesc;
+            double currentInterval = SettingsManager.ScanInterval;
+
+            if (currentInterval <= 0)
+            {
+                intervalDesc = _resourceLoader.GetString("StatusBar_Stopped");
+            }
+            else
+            {
+                string refreshFormat = _resourceLoader.GetString("StatusBar_RefreshRate");
+                intervalDesc = string.Format(refreshFormat, currentInterval);
+            }
+
+            string timeStr = _lastUpdateTime == DateTime.MinValue
+                ? "N/A"
+                : _lastUpdateTime.ToString("HH:mm:ss");
+
+            int gpuCount = _gpuProvider?.GpuCount ?? 0;
+
+            try
+            {
+                StatusMessage = string.Format(statusFormat, timeStr, gpuCount, intervalDesc);
+            }
+            catch
+            {
+                StatusMessage = $"{timeStr} | {gpuCount} GPUs | {intervalDesc}";
+            }
         }
 
         public void Cleanup()
         {
             _timer?.Stop();
-            _perfHelper?.Cleanup();
-            if (_isInitialized)
-            {
-                NvmlApi.Shutdown();
-                _isInitialized = false;
-            }
             SettingsManager.ScanIntervalChanged -= OnScanIntervalChanged;
+            _gpuProvider?.Dispose();
+            _isInitialized = false;
         }
+
+        [RelayCommand]
+        private void ToggleGrouping()
+        {
+            IsGrouped = !IsGrouped;
+            RefreshDisplay();
+            GroupingChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        partial void OnFilterTextChanged(string value) => RefreshDisplay();
     }
 }

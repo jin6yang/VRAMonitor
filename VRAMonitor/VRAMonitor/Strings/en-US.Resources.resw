@@ -132,8 +132,13 @@
   <data name="NavAbout.Content" xml:space="preserve">
     <value>About</value>
   </data>
-  <data name="SearchPlaceholder.PlaceholderText" xml:space="preserve">
+
+  <!-- Search Related Strings -->
+  <data name="SearchPlaceholder_Processes" xml:space="preserve">
     <value>Search by name, publisher or PID</value>
+  </data>
+  <data name="SearchPlaceholder_Unavailable" xml:space="preserve">
+    <value>Search unavailable on this page</value>
   </data>
 
   <data name="PageTitle_Processes.Text" xml:space="preserve">
@@ -170,6 +175,17 @@
   </data>
   <data name="Menu_Properties.Text" xml:space="preserve">
     <value>Properties</value>
+  </data>
+
+  <!-- Status Bar Strings -->
+  <data name="StatusBar_Format" xml:space="preserve">
+    <value>Last Updated: {0} | Monitoring {1} GPUs | {2}</value>
+  </data>
+  <data name="StatusBar_Stopped" xml:space="preserve">
+    <value>Monitoring Stopped</value>
+  </data>
+  <data name="StatusBar_RefreshRate" xml:space="preserve">
+    <value>Refreshes every {0:F1}s</value>
   </data>
 
   <data name="TrayShowMain.Text" xml:space="preserve">
@@ -243,6 +259,16 @@
   <data name="SettingsScanInterval.Description" xml:space="preserve">
     <value>Adjust frequency to balance performance</value>
   </data>
+    <data name="SettingsScanIntervalStopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
+    <data name="SettingsShowSelectionPill.Header" xml:space="preserve">
+    <value>Show List Selection Indicator</value>
+  </data>
+  <data name="SettingsShowSelectionPill.Description" xml:space="preserve">
+    <value>Show Windows 11 style selection pill indicator on the left of selected item</value>
+  </data>
+
   <data name="SettingsSectionTheme.Text" xml:space="preserve">
     <value>Theme</value>
   </data>

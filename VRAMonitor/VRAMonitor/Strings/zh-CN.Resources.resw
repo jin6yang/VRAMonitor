@@ -132,8 +132,13 @@
   <data name="NavAbout.Content" xml:space="preserve">
     <value>关于</value>
   </data>
-  <data name="SearchPlaceholder.PlaceholderText" xml:space="preserve">
-    <value>键入要搜索的名称、发布者或PID</value>
+
+  <!-- Search Related Strings -->
+  <data name="SearchPlaceholder_Processes" xml:space="preserve">
+    <value>输入要搜索的名称、发布者或PID</value>
+  </data>
+  <data name="SearchPlaceholder_Unavailable" xml:space="preserve">
+    <value>搜索在此页面不可用</value>
   </data>
 
   <data name="TrayShowMain.Text" xml:space="preserve">
@@ -180,6 +185,17 @@
   </data>
   <data name="Menu_Properties.Text" xml:space="preserve">
     <value>属性</value>
+  </data>
+
+  <!-- Status Bar Strings -->
+  <data name="StatusBar_Format" xml:space="preserve">
+    <value>最后更新于: {0} | 监控 {1} 个 GPU | {2}</value>
+  </data>
+  <data name="StatusBar_Stopped" xml:space="preserve">
+    <value>已停止监控</value>
+  </data>
+  <data name="StatusBar_RefreshRate" xml:space="preserve">
+    <value>每 {0:F1} 秒刷新</value>
   </data>
 
   <data name="SettingsTitle.Text" xml:space="preserve">
@@ -235,6 +251,7 @@
   <data name="SettingsTopMostLaunchPowerToys.Description" xml:space="preserve">
     <value>点击即可尝试启动 PowerToys 应用程序</value>
   </data>
+
   <data name="SettingsSectionFunctions.Text" xml:space="preserve">
     <value>功能</value>
   </data>
@@ -244,6 +261,16 @@
   <data name="SettingsScanInterval.Description" xml:space="preserve">
     <value>调整检测频率以平衡性能与实时性</value>
   </data>
+    <data name="SettingsScanIntervalStopped" xml:space="preserve">
+    <value>已停止</value>
+  </data>
+  <data name="SettingsShowSelectionPill.Header" xml:space="preserve">
+    <value>显示列表选中指示器</value>
+  </data>
+  <data name="SettingsShowSelectionPill.Description" xml:space="preserve">
+    <value>在进程列表中被选中的项目左侧显示 Windows 11 风格的指示条</value>
+  </data>
+
   <data name="SettingsSectionTheme.Text" xml:space="preserve">
     <value>主题</value>
   </data>

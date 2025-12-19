@@ -1,4 +1,6 @@
-﻿using System;
+﻿// 注意！此类已经被废弃，被WddmTelemetryProvider.cs代替
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;

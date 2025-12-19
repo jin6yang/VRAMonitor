@@ -75,11 +75,11 @@ VRAMonitor
 
 ## 更新路线
 
-- 修复部分bug
-- 制作看板页面
-- 兼容 AMD GPU (使用ADLX)
-- 兼容 Intel GPU (使用Intel(R) Metrics Discovery API)
-- 兼容 Moore Threads GPU (使用WDDM)
+- [ ] 完善设置页面部分设置的功能
+- [ ] 制作看板页面 (DashboardPage)
+- [ ] 兼容 AMD GPU (使用WDDM)
+- [ ] 兼容 Intel GPU (使用WDDM)
+- [ ] 兼容 Moore Threads GPU (使用WDDM)
 
 
 
