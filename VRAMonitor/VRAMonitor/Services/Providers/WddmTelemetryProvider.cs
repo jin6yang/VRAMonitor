@@ -22,12 +22,14 @@ namespace VRAMonitor.Services.Providers
         private bool _isSupported = false;
         private readonly object _lock = new();
 
-        public string ProviderName => "Windows WDDM (DXGI + Dedup)";
+        public string ProviderName => "Windows WDDM (Unified Index)";
         public bool IsSupported => _isSupported;
         public int GpuCount => _adapters.Count;
 
         private class GpuAdapter
         {
+            // [新增] 全局统一索引
+            public int Index { get; set; }
             public string Name { get; set; }
             public long Luid { get; set; }
             public string InstanceName { get; set; }
@@ -41,6 +43,7 @@ namespace VRAMonitor.Services.Providers
         {
             try
             {
+                // 尝试初始化计数器类别
                 string[] procNames = { "GPU Process Memory", "GPU 进程内存" };
                 foreach (var name in procNames)
                     if (PerformanceCounterCategory.Exists(name)) { _processCategory = new PerformanceCounterCategory(name); _isSupported = true; break; }
@@ -54,7 +57,8 @@ namespace VRAMonitor.Services.Providers
             catch (Exception ex)
             {
                 Debug.WriteLine($"WddmTelemetryProvider init error: {ex.Message}");
-                _isSupported = true; // Still allow static info
+                // 即使计数器初始化失败，DXGI 依然可以工作
+                _isSupported = true;
             }
         }
 
@@ -62,7 +66,10 @@ namespace VRAMonitor.Services.Providers
         {
             _adapters.Clear();
 
+            // 1. 获取物理 GPU 信息 (包含 Index 和准确的 VRAM 大小)
             var dxgiGpus = GpuInfoHelper.GetAllGpus();
+
+            // 2. 获取性能计数器实例名称
             string[] instanceNames = Array.Empty<string>();
             try
             {
@@ -72,10 +79,10 @@ namespace VRAMonitor.Services.Providers
 
             var luidRegex = new Regex(@"luid_0x([0-9a-fA-F]+)_0x([0-9a-fA-F]+)_phys_0", RegexOptions.IgnoreCase);
 
-            // --- 步骤 1: 扫描所有 GPU，找出哪些能匹配到计数器 ---
-            // 这是一个预处理步骤，用于构建 "已知有效 GPU 名称" 的集合
-            HashSet<string> validGpuNames = new();
+            // 构建 LUID -> 实例名 的映射
+            // 同时记录哪些显卡名称是“有效”的（即匹配到了计数器）
             Dictionary<long, string> luidToInstance = new();
+            HashSet<string> validGpuNames = new();
 
             foreach (var gpu in dxgiGpus)
             {
@@ -94,7 +101,7 @@ namespace VRAMonitor.Services.Providers
                             if (instLuid == gpu.Luid)
                             {
                                 luidToInstance[gpu.Luid] = instance;
-                                validGpuNames.Add(gpu.Name); // 标记此名称的 GPU 是真实存在的
+                                validGpuNames.Add(gpu.Name);
                                 break;
                             }
                         }
@@ -103,36 +110,34 @@ namespace VRAMonitor.Services.Providers
                 }
             }
 
-            // --- 步骤 2: 创建适配器对象并去重 ---
-            HashSet<string> addedFallbackNames = new(); // 用于防止重复添加无效的 Ghost 显卡
+            // [去重逻辑]
+            // 防止重复添加无法监控的“幽灵”显卡（如 AMD 890M 的多余节点）
+            HashSet<string> addedFallbackNames = new();
 
             foreach (var gpuInfo in dxgiGpus)
             {
                 string matchedInstance = null;
                 luidToInstance.TryGetValue(gpuInfo.Luid, out matchedInstance);
 
-                // [去重逻辑 A] 如果这个显卡没有匹配到计数器，且它的名字在 "有效名单" 里
-                // 说明这是一个同名的 Ghost 节点（例如 890M 的计算节点），我们应该忽略它
+                // Case A: 这是一个幽灵节点（没有匹配计数器），但在系统里已经有同名的有效节点了
+                // -> 忽略它，因为它只是驱动暴露的计算/链接接口，不是主显示接口
                 if (matchedInstance == null && validGpuNames.Contains(gpuInfo.Name))
                 {
                     Debug.WriteLine($"[WDDM] Skipping ghost adapter: {gpuInfo.Name} (LUID: 0x{gpuInfo.Luid:X})");
                     continue;
                 }
 
-                // [去重逻辑 B] 如果这个显卡没有匹配到计数器，且名字也没在有效名单里（可能是权限问题全挂了）
-                // 我们只添加第一个，后续同名的都忽略，避免列表里出现 3 个无法监控的 890M
+                // Case B: 这是一个无效节点，且之前也没添加过同名的节点（可能是全都不支持计数器，或权限受限）
+                // -> 只添加第一个作为 Fallback，防止列表显示 3 个同样的卡
                 if (matchedInstance == null)
                 {
-                    if (addedFallbackNames.Contains(gpuInfo.Name))
-                    {
-                        continue;
-                    }
+                    if (addedFallbackNames.Contains(gpuInfo.Name)) continue;
                     addedFallbackNames.Add(gpuInfo.Name);
                 }
 
-                // 创建适配器
                 var adapter = new GpuAdapter
                 {
+                    Index = gpuInfo.Index, // [重要] 传递 DXGI 统一索引
                     Name = gpuInfo.Name,
                     Luid = gpuInfo.Luid,
                     InstanceName = matchedInstance,
@@ -149,7 +154,10 @@ namespace VRAMonitor.Services.Providers
                         adapter.DedicatedCounter?.NextValue();
                         adapter.SharedCounter?.NextValue();
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Failed to init counters for {gpuInfo.Name}: {ex.Message}");
+                    }
                 }
 
                 _adapters.Add(adapter);
@@ -184,7 +192,6 @@ namespace VRAMonitor.Services.Providers
             }
         }
 
-        // [修复] 补回 CreateProcessCounter
         private PerformanceCounter CreateProcessCounter(string englishName, string instanceName)
         {
             if (_processCategory == null) return null;
@@ -244,6 +251,7 @@ namespace VRAMonitor.Services.Providers
             {
                 var info = new GpuStatusInfo
                 {
+                    Index = adapter.Index, // [重要] 传递 Index
                     Name = adapter.Name,
                     DedicatedTotal = adapter.DedicatedTotal,
                     SharedTotal = adapter.SharedTotal,
@@ -269,15 +277,49 @@ namespace VRAMonitor.Services.Providers
                 var result = new Dictionary<uint, (ulong Vram, string Engine)>();
                 if (!_isSupported) return result;
 
+                var luidRegex = new Regex(@"luid_0x([0-9a-fA-F]+)_0x([0-9a-fA-F]+)_phys_0", RegexOptions.IgnoreCase);
+
                 foreach (var kvp in _pidToInstanceMap)
                 {
                     uint pid = kvp.Key;
-                    ulong total = 0;
+                    ulong totalVram = 0;
+                    HashSet<string> engines = new();
+
                     foreach (var instance in kvp.Value)
                     {
-                        total += ReadProcessCounter(instance, "Dedicated Usage");
+                        ulong usage = ReadProcessCounter(instance, "Dedicated Usage");
+                        if (usage > 0)
+                        {
+                            totalVram += usage;
+
+                            // [新增] 尝试解析进程所在的 GPU Index
+                            // 格式: pid_1234_luid_0x...
+                            var match = luidRegex.Match(instance);
+                            if (match.Success)
+                            {
+                                try
+                                {
+                                    long high = Convert.ToInt64(match.Groups[1].Value, 16);
+                                    long low = Convert.ToInt64(match.Groups[2].Value, 16);
+                                    long instLuid = (high << 32) | low;
+
+                                    // 查找 LUID 对应的 Adapter 以获取 Index
+                                    var adapter = _adapters.FirstOrDefault(a => a.Luid == instLuid);
+                                    if (adapter != null)
+                                    {
+                                        engines.Add($"GPU {adapter.Index}"); // 简化显示为 "GPU 0", "GPU 1"
+                                    }
+                                }
+                                catch { }
+                            }
+                        }
                     }
-                    if (total > 0) result[pid] = (total, "GPU (WDDM)");
+
+                    if (totalVram > 0)
+                    {
+                        string engineStr = engines.Count > 0 ? string.Join(", ", engines) : "GPU";
+                        result[pid] = (totalVram, engineStr);
+                    }
                 }
                 return result;
             }

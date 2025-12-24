@@ -89,10 +89,10 @@ VRAMonitor
 - [ ] 完善设置页面部分设置的功能
 - [ ] 制作看板页面 (DashboardPage)
 - [ ] 在设置页面中添加一个设置项，“选择默认启动页”
-- [ ] 兼容 AMD GPU (使用 DXGI+WDDM)
-- [ ] 兼容 Intel GPU (使用 DXGI+WDDM)
-- [ ] 兼容 Moore Threads GPU (使用 DXGI+WDDM)
-- [ ] 优化对 NVIDIA GPU 的数据获取 (使用 NVML+WDDM)
+- [x] 兼容 AMD GPU (使用 DXGI+WDDM)
+- [x] 兼容 Intel GPU (使用 DXGI+WDDM)
+- [x] 兼容 Moore Threads GPU (使用 DXGI+WDDM)
+- [x] 优化对 NVIDIA GPU 的数据获取 (使用 DXGI+NVML+WDDM)
 
 
 

@@ -10,7 +10,6 @@ using VRAMonitor.Services;
 using VRAMonitor.ViewModels.Pages;
 using VRAMonitor.Views.Interfaces;
 using Windows.ApplicationModel.Resources;
-// 引用 Dispatching 命名空间
 using Microsoft.UI.Dispatching;
 
 namespace VRAMonitor.Views.Pages
@@ -20,6 +19,7 @@ namespace VRAMonitor.Views.Pages
         public ProcessesPageViewModel ViewModel { get; }
         private readonly ResourceLoader _resourceLoader;
 
+        // ... System Process HashSets (不变) ...
         private readonly HashSet<string> _criticalSystemProcesses = new()
         {
             "csrss", "wininit", "smss", "services", "lsass", "winlogon",
@@ -31,7 +31,7 @@ namespace VRAMonitor.Views.Pages
             "dwm", "explorer", "taskmgr", "tabtip"
         };
 
-        #region P/Invoke Definitions
+        #region P/Invoke Definitions (不变)
         [DllImport("shell32.dll", CharSet = CharSet.Auto)]
         static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO lpExecInfo);
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
@@ -64,11 +64,8 @@ namespace VRAMonitor.Views.Pages
 
         public ProcessesPage()
         {
-            // [修改] 显式传入 UI 线程的 DispatcherQueue，防止 ViewModel 内部获取到错误的线程上下文
             ViewModel = new ProcessesPageViewModel(DispatcherQueue.GetForCurrentThread());
-
             InitializeComponent();
-
             try { _resourceLoader = new ResourceLoader(); } catch { }
 
             ViewModel.GroupingChanged += OnViewModelGroupingChanged;
@@ -78,19 +75,9 @@ namespace VRAMonitor.Views.Pages
             UpdateListViewStyle(SettingsManager.ShowSelectionPill);
         }
 
-        // === 实现 ISearchablePage 接口 ===
-
-        public void OnSearch(string query)
-        {
-            ViewModel.FilterText = query;
-        }
-
-        public string SearchPlaceholderText
-        {
-            get => _resourceLoader?.GetString("SearchPlaceholder_Processes") ?? "Search processes...";
-        }
-
-        // ===================================
+        // ... ISearchablePage Implementation (不变) ...
+        public void OnSearch(string query) => ViewModel.FilterText = query;
+        public string SearchPlaceholderText => _resourceLoader?.GetString("SearchPlaceholder_Processes") ?? "Search processes...";
 
         private void UpdateListViewStyle(bool showPill)
         {
@@ -103,10 +90,7 @@ namespace VRAMonitor.Views.Pages
 
         private void OnShowSelectionPillChanged(object sender, bool showPill)
         {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                UpdateListViewStyle(showPill);
-            });
+            DispatcherQueue.TryEnqueue(() => UpdateListViewStyle(showPill));
         }
 
         private void OnViewModelGroupingChanged(object sender, EventArgs e)
@@ -117,7 +101,6 @@ namespace VRAMonitor.Views.Pages
         private void UpdateCollectionViewSource()
         {
             ProcessCVS.Source = null;
-
             if (ViewModel.IsGrouped)
             {
                 ProcessCVS.IsSourceGrouped = true;
@@ -136,6 +119,7 @@ namespace VRAMonitor.Views.Pages
             ViewModel.Initialize();
         }
 
+        // [关键] 页面离开时彻底清理，防止后台线程更新 UI 导致崩溃
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
@@ -143,6 +127,11 @@ namespace VRAMonitor.Views.Pages
             ViewModel.GroupingChanged -= OnViewModelGroupingChanged;
             SettingsManager.ShowSelectionPillChanged -= OnShowSelectionPillChanged;
         }
+
+        // ... Event Handlers (OnEndProcessClick, etc.) 保持不变 ...
+        // 为了节省篇幅，这里省略了未修改的按钮点击事件处理代码，
+        // 请保留原文件中的 OnEndProcessClick, OnEfficiencyModeClick, OnOpenLocationClick, OnPropertiesClick 等方法
+        // ...
 
         private async void OnEndProcessClick(object sender, RoutedEventArgs e)
         {

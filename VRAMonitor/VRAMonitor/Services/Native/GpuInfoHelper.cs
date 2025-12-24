@@ -7,7 +7,7 @@ namespace VRAMonitor.Services.Native
 {
     /// <summary>
     /// 使用 DXGI (DirectX Graphics Infrastructure) 获取 GPU 信息。
-    /// [修复 v3] 暴露 DedicatedVideoMemory 和 SharedSystemMemory，解决显存显示不准的问题。
+    /// [Final Version] 包含完整的 COM 接口定义、显存读取和统一索引分配。
     /// </summary>
     public static class GpuInfoHelper
     {
@@ -102,6 +102,9 @@ namespace VRAMonitor.Services.Native
 
         public class GpuInfo
         {
+            // [关键修改] 统一编号，对应任务管理器的 GPU 0, 1...
+            public int Index { get; set; }
+
             public string Name { get; set; }
             public string HardwareId { get; set; }
             public uint VendorId { get; set; }
@@ -109,14 +112,14 @@ namespace VRAMonitor.Services.Native
             public long Luid { get; set; } = 0;
             public bool IsSoftware { get; set; }
 
-            // [新增] 直接从 DXGI 获取的显存大小
+            // 显存大小 (Bytes)
             public ulong DedicatedMemory { get; set; }
             public ulong SharedMemory { get; set; }
         }
 
         public static List<GpuInfo> GetAllGpus()
         {
-            Debug.WriteLine("[GpuInfoHelper] Start scanning for GPUs via DXGI (v3 - Memory Info)...");
+            Debug.WriteLine("[GpuInfoHelper] Start scanning for GPUs via DXGI...");
             var result = new List<GpuInfo>();
 
             IntPtr pFactory = IntPtr.Zero;
@@ -125,17 +128,30 @@ namespace VRAMonitor.Services.Native
                 Guid riid = IID_IDXGIFactory1;
                 int hr = CreateDXGIFactory1(ref riid, out pFactory);
 
-                if (hr != 0 || pFactory == IntPtr.Zero) return result;
+                if (hr != 0 || pFactory == IntPtr.Zero)
+                {
+                    Debug.WriteLine($"[GpuInfoHelper] CreateDXGIFactory1 failed: 0x{hr:X}");
+                    return result;
+                }
 
                 var factory = (IDXGIFactory1)Marshal.GetObjectForIUnknown(pFactory);
-                uint index = 0;
+
+                // DXGI 底层枚举索引
+                uint enumIndex = 0;
+
+                // 逻辑索引 (用于 UI 展示，仅包含有效物理卡)
+                int logicalIndex = 0;
 
                 while (true)
                 {
                     IDXGIAdapter1 adapter = null;
                     try
                     {
-                        hr = factory.EnumAdapters1(index, out adapter);
+                        hr = factory.EnumAdapters1(enumIndex, out adapter);
+
+                        // 枚举结束
+                        if (hr == DXGI_ERROR_NOT_FOUND) break;
+                        // 其他错误
                         if (hr != 0 || adapter == null) break;
 
                         DXGI_ADAPTER_DESC1 desc;
@@ -149,52 +165,60 @@ namespace VRAMonitor.Services.Native
                                 Luid = desc.Luid,
                                 HardwareId = $"PCI\\VEN_{desc.VendorId:X4}&DEV_{desc.DeviceId:X4}",
                                 IsSoftware = (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) != 0,
-
-                                // [新增] 填充显存数据
                                 DedicatedMemory = desc.DedicatedVideoMemory.ToUInt64(),
                                 SharedMemory = desc.SharedSystemMemory.ToUInt64()
                             };
 
-                            Debug.WriteLine($"[GpuInfoHelper] Device {index}: {gpuInfo.Name}");
-                            Debug.WriteLine($"  LUID: {gpuInfo.Luid} (0x{gpuInfo.Luid:X})");
-                            Debug.WriteLine($"  VRAM: {gpuInfo.DedicatedMemory / 1024 / 1024} MB");
-
+                            // 过滤逻辑
                             if (IsPhysicalGpu(gpuInfo))
                             {
+                                // 分配逻辑索引
+                                gpuInfo.Index = logicalIndex++;
                                 result.Add(gpuInfo);
+                                Debug.WriteLine($"[GpuInfoHelper] Accepted: GPU {gpuInfo.Index} - {gpuInfo.Name} (LUID: 0x{gpuInfo.Luid:X})");
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"[GpuInfoHelper] Rejected: {gpuInfo.Name}");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"[GpuInfoHelper] Error at index {index}: {ex.Message}");
+                        Debug.WriteLine($"[GpuInfoHelper] Error at index {enumIndex}: {ex.Message}");
                     }
                     finally
                     {
-                        if (adapter != null && Marshal.IsComObject(adapter)) Marshal.ReleaseComObject(adapter);
+                        if (adapter != null && Marshal.IsComObject(adapter))
+                        {
+                            Marshal.ReleaseComObject(adapter);
+                        }
                     }
-                    index++;
+                    enumIndex++;
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[GpuInfoHelper] Critical Error: {ex.Message}");
+                Debug.WriteLine($"[GpuInfoHelper] DXGI Critical Error: {ex}");
             }
             finally
             {
                 if (pFactory != IntPtr.Zero) Marshal.Release(pFactory);
             }
 
-            Debug.WriteLine($"[GpuInfoHelper] Total accepted: {result.Count}");
             return result;
         }
 
         private static bool IsPhysicalGpu(GpuInfo info)
         {
             if (string.IsNullOrWhiteSpace(info.Name)) return false;
+
+            // 1. DXGI 软件标志
             if (info.IsSoftware) return false;
 
             string nameLower = info.Name.ToLower();
+
+            // 2. 白名单厂商
             bool isKnownVendor =
                 info.VendorId == 0x10DE || // NVIDIA
                 info.VendorId == 0x1002 || // AMD
@@ -203,6 +227,7 @@ namespace VRAMonitor.Services.Native
                 info.VendorId == 0x1D17 || // Zhaoxin
                 info.VendorId == 0x0014;   // Loongson
 
+            // 3. 黑名单关键字
             string[] blacklist = new[]
             {
                 "microsoft basic", "microsoft remote",
@@ -216,13 +241,17 @@ namespace VRAMonitor.Services.Native
             };
 
             foreach (var keyword in blacklist)
+            {
                 if (nameLower.Contains(keyword)) return false;
+            }
 
-            if (info.VendorId == 0x1414) return false;
+            if (info.VendorId == 0x1414) return false; // Microsoft
 
+            // 4. 未知厂商放行策略
             if (!isKnownVendor)
             {
                 bool looksLikeGpu = nameLower.Contains("display") || nameLower.Contains("adapter") || nameLower.Contains("gpu") || nameLower.Contains("graphics");
+                // 必须有有效的 LUID 才放行
                 if (looksLikeGpu && info.Luid != 0) return true;
                 return false;
             }

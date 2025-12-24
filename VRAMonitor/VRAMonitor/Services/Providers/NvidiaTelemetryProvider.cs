@@ -1,263 +1,191 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Linq;
 using System.Diagnostics;
+using System.Linq;
 using VRAMonitor.Nvidia;
 
 namespace VRAMonitor.Services.Providers
 {
     /// <summary>
-    /// 简化版 NVIDIA 提供者：完全不依赖 DXGI
-    /// 使用 NVML 获取 N 卡信息，使用纯 WDDM 获取其他 GPU
+    /// 混合提供者：
+    /// 1. 使用 WddmTelemetryProvider 作为基底，确保获取到正确的全局 GPU 索引和核显信息。
+    /// 2. 使用 NVML "增强" NVIDIA 显卡的数据（提供更准确的显存读数和核心利用率）。
     /// </summary>
     public class NvidiaTelemetryProvider : IGpuTelemetryProvider
     {
-        private List<(int Index, IntPtr Handle, string Name)> _nvDevices = new();
-        private bool _isInitialized = false;
+        // 基底提供者 (负责 DXGI 枚举、核显数据、进程 VRAM)
+        private readonly WddmTelemetryProvider _baseProvider;
 
-        // 备用 WDDM 提供者（用于获取非 N 卡和共享显存信息）
-        private WddmTelemetryProvider _fallbackProvider;
+        // NVML 设备句柄缓存
+        private readonly Dictionary<int, IntPtr> _nvmlHandleCache = new();
+        private bool _isNvmlInitialized = false;
 
-        public string ProviderName => "NVIDIA NVML + WDDM (Hybrid, No DXGI)";
-        public bool IsSupported => _isInitialized && _nvDevices.Count > 0;
+        public string ProviderName => "NVIDIA NVML + WDDM (Unified Index)";
 
-        public int GpuCount => GetGpuStatuses().Count;
+        // 只要基底支持，或者 NVML 初始化成功，就认为支持
+        public bool IsSupported => _baseProvider.IsSupported || _isNvmlInitialized;
+
+        public int GpuCount => _baseProvider.GpuCount;
 
         public NvidiaTelemetryProvider()
         {
-            Initialize();
-            _fallbackProvider = new WddmTelemetryProvider();
+            // 1. 初始化基底 (WDDM/DXGI)
+            _baseProvider = new WddmTelemetryProvider();
+
+            // 2. 初始化 NVML
+            InitializeNvml();
         }
 
-        private void Initialize()
+        private void InitializeNvml()
         {
             try
             {
                 var result = NvmlApi.Init();
-                if (result != NvmlApi.NvmlReturn.Success)
+                if (result == NvmlApi.NvmlReturn.Success)
                 {
-                    Debug.WriteLine($"NVML Init failed: {result}");
-                    return;
+                    _isNvmlInitialized = true;
+                    // 尝试预匹配 NVML 设备到 DXGI 索引
+                    MapNvmlDevices();
                 }
-
-                uint deviceCount = 0;
-                NvmlApi.DeviceGetCount(ref deviceCount);
-
-                if (deviceCount == 0)
+                else
                 {
-                    Debug.WriteLine("No NVIDIA devices found");
-                    return;
+                    Debug.WriteLine($"[NvidiaProvider] NVML Init failed: {result}");
                 }
-
-                var nameBuffer = new StringBuilder(256);
-                for (uint i = 0; i < deviceCount; i++)
-                {
-                    if (NvmlApi.DeviceGetHandleByIndex(i, out IntPtr handle) == NvmlApi.NvmlReturn.Success)
-                    {
-                        NvmlApi.DeviceGetName(handle, nameBuffer, (uint)nameBuffer.Capacity);
-                        _nvDevices.Add(((int)i, handle, nameBuffer.ToString()));
-                        Debug.WriteLine($"Found NVIDIA GPU {i}: {nameBuffer}");
-                    }
-                }
-
-                _isInitialized = true;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"NVML initialization error: {ex.Message}");
-                _isInitialized = false;
+                Debug.WriteLine($"[NvidiaProvider] NVML Load Exception: {ex.Message}");
             }
         }
 
-        public string GetGpuName()
+        private void MapNvmlDevices()
         {
-            var statuses = GetGpuStatuses();
-            if (statuses.Count > 0)
+            if (!_isNvmlInitialized) return;
+
+            _nvmlHandleCache.Clear();
+
+            // 获取基底的所有 GPU (带有正确的 Index)
+            var wddmGpus = _baseProvider.GetGpuStatuses();
+
+            // 获取 NVML 设备数量
+            uint nvCount = 0;
+            NvmlApi.DeviceGetCount(ref nvCount);
+
+            // 简单匹配逻辑：
+            // 遍历 WDDM 列表，如果是 NVIDIA 显卡，则尝试按顺序分配 NVML 句柄。
+            // 注意：这在多 N 卡环境下可能不准确（需要对比 PCI Bus ID），
+            // 但对于 "核显 + 1张独显" 的笔记本/台式机环境，这种顺序匹配通常是正确的。
+
+            uint nvIndex = 0;
+            foreach (var gpu in wddmGpus)
             {
-                return string.Join(" | ", statuses.Select(s => s.Name));
+                if (IsNvidiaCard(gpu.Name))
+                {
+                    if (nvIndex < nvCount)
+                    {
+                        IntPtr handle;
+                        var ret = NvmlApi.DeviceGetHandleByIndex(nvIndex, out handle);
+                        if (ret == NvmlApi.NvmlReturn.Success)
+                        {
+                            _nvmlHandleCache[gpu.Index] = handle;
+                            Debug.WriteLine($"[NvidiaProvider] Mapped DXGI GPU {gpu.Index} ({gpu.Name}) to NVML Device {nvIndex}");
+                        }
+                        nvIndex++;
+                    }
+                }
             }
-            return "Unknown GPU";
         }
+
+        private bool IsNvidiaCard(string name)
+        {
+            return name.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) ||
+                   name.Contains("GeForce", StringComparison.OrdinalIgnoreCase) ||
+                   name.Contains("RTX", StringComparison.OrdinalIgnoreCase) ||
+                   name.Contains("Quadro", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public string GetGpuName() => _baseProvider.GetGpuName();
 
         public void Refresh()
         {
-            _fallbackProvider?.Refresh();
+            // 刷新基底 (处理插拔等)
+            _baseProvider.Refresh();
+
+            // 如果 GPU 数量变化，可能需要重新映射 NVML (简化起见暂不重置 NVML)
         }
 
         public List<GpuStatusInfo> GetGpuStatuses()
         {
-            var result = new List<GpuStatusInfo>();
+            // 1. 获取基底数据 (WDDM)
+            // 这确保了我们有核显的数据，且 Index 是正确的
+            var statuses = _baseProvider.GetGpuStatuses();
 
-            // 1. 获取 WDDM 的完整 GPU 列表（包含所有显卡）
-            var wddmGpus = _fallbackProvider?.GetGpuStatuses() ?? new List<GpuStatusInfo>();
-
-            Debug.WriteLine($"WDDM found {wddmGpus.Count} GPUs");
-
-            // 2. 标记哪些 WDDM GPU 已被 NVML 处理
-            var matchedIndices = new HashSet<int>();
-
-            // 3. 遍历 NVML 设备，用更精确的数据覆盖 WDDM 的对应项
-            if (_isInitialized)
+            // 2. 使用 NVML 数据“修补” NVIDIA 显卡的状态
+            if (_isNvmlInitialized)
             {
-                foreach (var (index, handle, nvName) in _nvDevices)
+                for (int i = 0; i < statuses.Count; i++)
                 {
-                    var status = new GpuStatusInfo { Name = nvName };
+                    var status = statuses[i];
 
-                    // [NVML] 核心利用率（WDDM 无法提供）
-                    if (NvmlApi.DeviceGetUtilizationRates(handle, out var util) == NvmlApi.NvmlReturn.Success)
+                    // 如果我们缓存了这个 Index 对应的 NVML 句柄
+                    if (_nvmlHandleCache.TryGetValue(status.Index, out IntPtr handle))
                     {
-                        status.CoreLoad = util.gpu;
-                    }
-
-                    // [NVML] 专用显存（比 WDDM 更准确）
-                    if (NvmlApi.DeviceGetMemoryInfo(handle, out var mem) == NvmlApi.NvmlReturn.Success)
-                    {
-                        status.DedicatedUsed = mem.used;
-                        status.DedicatedTotal = mem.total;
-                    }
-
-                    // [匹配 WDDM] 找到对应的 WDDM GPU 以获取共享显存
-                    int bestMatch = -1;
-                    for (int i = 0; i < wddmGpus.Count; i++)
-                    {
-                        if (matchedIndices.Contains(i)) continue;
-
-                        var wddm = wddmGpus[i];
-
-                        // 匹配策略：名称包含 NVIDIA 或相似
-                        if (wddm.Name.IndexOf("NVIDIA", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                            nvName.IndexOf(wddm.Name, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                            wddm.Name.IndexOf(nvName, StringComparison.OrdinalIgnoreCase) >= 0)
+                        try
                         {
-                            bestMatch = i;
-                            Debug.WriteLine($"Matched NVML GPU {index} with WDDM GPU {i}");
-                            break;
+                            // A. 获取显存信息
+                            NvmlApi.NvmlMemory memoryInfo;
+                            if (NvmlApi.DeviceGetMemoryInfo(handle, out memoryInfo) == NvmlApi.NvmlReturn.Success)
+                            {
+                                // 覆盖 WDDM 的显存数据 (NVML 通常更准)
+                                status.DedicatedUsed = memoryInfo.used;
+                                status.DedicatedTotal = memoryInfo.total; // 也可以保留 WDDM 的 Total，看哪个更准，通常 NVML Total 包含预留区
+                            }
+
+                            // B. 获取核心利用率
+                            NvmlApi.NvmlUtilization utilization;
+                            if (NvmlApi.DeviceGetUtilizationRates(handle, out utilization) == NvmlApi.NvmlReturn.Success)
+                            {
+                                status.CoreLoad = utilization.gpu; // NVML 返回的是 0-100 的整数
+                            }
+
+                            // C. (未来扩展) 在这里可以获取温度、功耗、风扇转速
+                            // float temp = 0;
+                            // NvmlApi.DeviceGetTemperature(handle, 0, ref temp);
+
+                            // 将修改后的结构体放回列表
+                            statuses[i] = status;
+                        }
+                        catch
+                        {
+                            // 如果 NVML 读取失败，保持 WDDM 数据不变
                         }
                     }
-
-                    // 使用 WDDM 的共享显存数据
-                    if (bestMatch >= 0)
-                    {
-                        var matched = wddmGpus[bestMatch];
-                        matchedIndices.Add(bestMatch);
-
-                        status.SharedTotal = matched.SharedTotal;
-                        status.SharedUsed = matched.SharedUsed;
-                    }
-                    else
-                    {
-                        // 如果没有匹配到，使用默认值
-                        Debug.WriteLine($"No WDDM match for NVML GPU {index}, using defaults");
-                        status.SharedTotal = 16UL * 1024 * 1024 * 1024; // 16GB 默认
-                        status.SharedUsed = 0;
-                    }
-
-                    result.Add(status);
                 }
             }
 
-            // 4. 添加未被 NVML 匹配的 WDDM GPU（核显、AMD 等）
-            for (int i = 0; i < wddmGpus.Count; i++)
-            {
-                if (!matchedIndices.Contains(i))
-                {
-                    Debug.WriteLine($"Adding unmatched WDDM GPU {i}: {wddmGpus[i].Name}");
-                    result.Add(wddmGpus[i]);
-                }
-            }
-
-            Debug.WriteLine($"Total GPUs returned: {result.Count}");
-            return result;
+            return statuses;
         }
 
         public Dictionary<uint, (ulong Vram, string Engine)> GetProcessVramUsage()
         {
-            var result = new Dictionary<uint, (ulong Vram, string Engine)>();
+            // 对于进程级统计，WDDM 的性能计数器通常已经足够好，且能覆盖所有显卡（包括核显）。
+            // NVML 的 DeviceGetComputeRunningProcesses 通常只包含 CUDA/计算进程，
+            // DeviceGetGraphicsRunningProcesses 也不一定全。
+            // 为了保持统一和稳定，直接使用 WDDM 的进程数据。
+            // (且我们已经在 WddmTelemetryProvider 里实现了 "GPU 0 - 3D" 的引擎名映射)
 
-            // 1. 底板：WDDM 数据（涵盖所有 GPU 进程）
-            if (_fallbackProvider != null)
-            {
-                var wddmData = _fallbackProvider.GetProcessVramUsage();
-                foreach (var kvp in wddmData)
-                {
-                    result[kvp.Key] = (kvp.Value.Vram, "GPU (Shared/Other)");
-                }
-            }
-
-            // 2. 覆盖：NVML 数据（N 卡进程）
-            var engineMap = new Dictionary<uint, HashSet<string>>();
-
-            if (_isInitialized)
-            {
-                foreach (var (index, handle, _) in _nvDevices)
-                {
-                    uint count = 0;
-                    var ret = NvmlApi.DeviceGetGraphicsRunningProcesses(handle, ref count, null);
-
-                    if (ret == NvmlApi.NvmlReturn.Success || ret == NvmlApi.NvmlReturn.ErrorInsufficientSize)
-                    {
-                        if (count > 0)
-                        {
-                            var infos = new NvmlApi.NvmlProcessInfo[count * 2];
-                            count = (uint)infos.Length;
-
-                            if (NvmlApi.DeviceGetGraphicsRunningProcesses(handle, ref count, infos) == NvmlApi.NvmlReturn.Success)
-                            {
-                                for (int i = 0; i < count; i++)
-                                {
-                                    var info = infos[i];
-                                    if (info.pid == 0) continue;
-
-                                    ulong usage = (info.usedGpuMemory == NvmlApi.NVML_VALUE_NOT_AVAILABLE)
-                                        ? 0
-                                        : info.usedGpuMemory;
-
-                                    // 如果 NVML 报告为 0，回退到 WDDM
-                                    if (usage == 0 && result.TryGetValue(info.pid, out var existing))
-                                    {
-                                        usage = existing.Vram;
-                                    }
-
-                                    string engineStr = $"GPU {index} - 3D";
-
-                                    if (!engineMap.ContainsKey(info.pid))
-                                    {
-                                        engineMap[info.pid] = new HashSet<string>();
-                                        result[info.pid] = (0, "");
-                                    }
-
-                                    var current = result[info.pid];
-                                    result[info.pid] = (current.Vram + usage, "");
-                                    engineMap[info.pid].Add(engineStr);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 3. 设置引擎显示字符串
-            var keys = result.Keys.ToList();
-            foreach (var pid in keys)
-            {
-                if (engineMap.TryGetValue(pid, out var engines))
-                {
-                    result[pid] = (result[pid].Vram, string.Join(", ", engines));
-                }
-            }
-
-            return result;
+            return _baseProvider.GetProcessVramUsage();
         }
 
         public void Dispose()
         {
-            if (_isInitialized)
+            _baseProvider?.Dispose();
+
+            if (_isNvmlInitialized)
             {
                 try { NvmlApi.Shutdown(); } catch { }
-                _isInitialized = false;
+                _isNvmlInitialized = false;
             }
-            _fallbackProvider?.Dispose();
         }
     }
 }

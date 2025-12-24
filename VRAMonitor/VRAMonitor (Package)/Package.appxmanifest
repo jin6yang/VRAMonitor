@@ -11,7 +11,7 @@
   <Identity
     Name="70e3324b-7e93-416c-b212-0ac5dcb59ab7"
     Publisher="CN=POINTER"
-    Version="0.1.0.0" />
+    Version="0.2.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="70e3324b-7e93-416c-b212-0ac5dcb59ab7" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
