@@ -2,149 +2,264 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
+using VRAMonitor.Services.Native;
 
 namespace VRAMonitor.Services.Providers
 {
     [SupportedOSPlatform("windows")]
     public class WddmTelemetryProvider : IGpuTelemetryProvider
     {
-        private PerformanceCounterCategory _category;
-        private readonly string _categoryName;
-        private Dictionary<string, PerformanceCounter> _counters = new();
+        private PerformanceCounterCategory _processCategory;
+        private Dictionary<string, PerformanceCounter> _processCounters = new();
         private Dictionary<uint, List<string>> _pidToInstanceMap = new();
-        private bool _isSupported = false;
-        private string _cachedGpuName = "Generic WDDM GPU";
 
+        private PerformanceCounterCategory _adapterCategory;
+        private List<GpuAdapter> _adapters = new();
+        private string _cachedGpuName = "Generic WDDM GPU";
+        private bool _isSupported = false;
         private readonly object _lock = new();
 
-        public string ProviderName => "Windows WDDM";
+        public string ProviderName => "Windows WDDM (DXGI + Dedup)";
         public bool IsSupported => _isSupported;
+        public int GpuCount => _adapters.Count;
 
-        public int GpuCount => 1;
+        private class GpuAdapter
+        {
+            public string Name { get; set; }
+            public long Luid { get; set; }
+            public string InstanceName { get; set; }
+            public ulong DedicatedTotal { get; set; }
+            public ulong SharedTotal { get; set; }
+            public PerformanceCounter DedicatedCounter { get; set; }
+            public PerformanceCounter SharedCounter { get; set; }
+        }
 
         public WddmTelemetryProvider()
         {
-            string[] possibleNames = { "GPU Process Memory", "GPU 进程内存" };
-            foreach (var name in possibleNames)
+            try
             {
-                if (PerformanceCounterCategory.Exists(name))
+                string[] procNames = { "GPU Process Memory", "GPU 进程内存" };
+                foreach (var name in procNames)
+                    if (PerformanceCounterCategory.Exists(name)) { _processCategory = new PerformanceCounterCategory(name); _isSupported = true; break; }
+
+                string[] adapterNames = { "GPU Adapter Memory", "GPU 适配器内存" };
+                foreach (var name in adapterNames)
+                    if (PerformanceCounterCategory.Exists(name)) { _adapterCategory = new PerformanceCounterCategory(name); break; }
+
+                InitializeAdapters();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"WddmTelemetryProvider init error: {ex.Message}");
+                _isSupported = true; // Still allow static info
+            }
+        }
+
+        private void InitializeAdapters()
+        {
+            _adapters.Clear();
+
+            var dxgiGpus = GpuInfoHelper.GetAllGpus();
+            string[] instanceNames = Array.Empty<string>();
+            try
+            {
+                if (_adapterCategory != null) instanceNames = _adapterCategory.GetInstanceNames();
+            }
+            catch { }
+
+            var luidRegex = new Regex(@"luid_0x([0-9a-fA-F]+)_0x([0-9a-fA-F]+)_phys_0", RegexOptions.IgnoreCase);
+
+            // --- 步骤 1: 扫描所有 GPU，找出哪些能匹配到计数器 ---
+            // 这是一个预处理步骤，用于构建 "已知有效 GPU 名称" 的集合
+            HashSet<string> validGpuNames = new();
+            Dictionary<long, string> luidToInstance = new();
+
+            foreach (var gpu in dxgiGpus)
+            {
+                foreach (var instance in instanceNames)
                 {
-                    _categoryName = name;
-                    _category = new PerformanceCounterCategory(_categoryName);
-                    _isSupported = true;
-                    break;
+                    if (!instance.Contains("phys_0")) continue;
+                    var match = luidRegex.Match(instance);
+                    if (match.Success)
+                    {
+                        try
+                        {
+                            long high = Convert.ToInt64(match.Groups[1].Value, 16);
+                            long low = Convert.ToInt64(match.Groups[2].Value, 16);
+                            long instLuid = (high << 32) | low;
+
+                            if (instLuid == gpu.Luid)
+                            {
+                                luidToInstance[gpu.Luid] = instance;
+                                validGpuNames.Add(gpu.Name); // 标记此名称的 GPU 是真实存在的
+                                break;
+                            }
+                        }
+                        catch { }
+                    }
                 }
             }
 
-            if (_isSupported) DetectGpuNameViaUser32();
+            // --- 步骤 2: 创建适配器对象并去重 ---
+            HashSet<string> addedFallbackNames = new(); // 用于防止重复添加无效的 Ghost 显卡
+
+            foreach (var gpuInfo in dxgiGpus)
+            {
+                string matchedInstance = null;
+                luidToInstance.TryGetValue(gpuInfo.Luid, out matchedInstance);
+
+                // [去重逻辑 A] 如果这个显卡没有匹配到计数器，且它的名字在 "有效名单" 里
+                // 说明这是一个同名的 Ghost 节点（例如 890M 的计算节点），我们应该忽略它
+                if (matchedInstance == null && validGpuNames.Contains(gpuInfo.Name))
+                {
+                    Debug.WriteLine($"[WDDM] Skipping ghost adapter: {gpuInfo.Name} (LUID: 0x{gpuInfo.Luid:X})");
+                    continue;
+                }
+
+                // [去重逻辑 B] 如果这个显卡没有匹配到计数器，且名字也没在有效名单里（可能是权限问题全挂了）
+                // 我们只添加第一个，后续同名的都忽略，避免列表里出现 3 个无法监控的 890M
+                if (matchedInstance == null)
+                {
+                    if (addedFallbackNames.Contains(gpuInfo.Name))
+                    {
+                        continue;
+                    }
+                    addedFallbackNames.Add(gpuInfo.Name);
+                }
+
+                // 创建适配器
+                var adapter = new GpuAdapter
+                {
+                    Name = gpuInfo.Name,
+                    Luid = gpuInfo.Luid,
+                    InstanceName = matchedInstance,
+                    DedicatedTotal = gpuInfo.DedicatedMemory,
+                    SharedTotal = gpuInfo.SharedMemory
+                };
+
+                if (matchedInstance != null)
+                {
+                    try
+                    {
+                        adapter.DedicatedCounter = CreateCounter("Dedicated Usage", matchedInstance);
+                        adapter.SharedCounter = CreateCounter("Shared Usage", matchedInstance);
+                        adapter.DedicatedCounter?.NextValue();
+                        adapter.SharedCounter?.NextValue();
+                    }
+                    catch { }
+                }
+
+                _adapters.Add(adapter);
+            }
+
+            if (_adapters.Count > 0)
+                _cachedGpuName = string.Join(" | ", _adapters.Select(a => a.Name));
         }
 
-        private void DetectGpuNameViaUser32()
+        private PerformanceCounter CreateCounter(string englishName, string instanceName)
         {
             try
             {
-                var device = new DISPLAY_DEVICE();
-                device.cb = Marshal.SizeOf(device);
-                var sb = new StringBuilder();
-                uint id = 0;
-
-                // [新增] 用于去重的集合
-                var seenNames = new HashSet<string>();
-
-                // [新增] 过滤关键词列表 (过滤虚拟显卡、USB显卡、远程桌面驱动等)
-                var ignoredKeywords = new[]
-                {
-                    "Microsoft Remote Display Adapter",
-                    "Microsoft Basic Render Driver",
-                    "Lebo",
-                    "Virtual",
-                    "GameViewer",
-                    "USB Monitor",
-                    "TeamViewer",
-                    "Radmin",
-                    "Citrix",
-                    "VNC",
-                    "AnyDesk",
-                    "Spacedesk",
-                    "Idda" // Indirect Display Driver Adapter
-                };
-
-                while (EnumDisplayDevices(null, id, ref device, 0))
-                {
-                    string name = device.DeviceString;
-
-                    if (!string.IsNullOrEmpty(name))
-                    {
-                        // 1. 去重检查
-                        if (!seenNames.Contains(name))
-                        {
-                            // 2. 关键词过滤检查
-                            bool isVirtual = ignoredKeywords.Any(k => name.IndexOf(k, StringComparison.OrdinalIgnoreCase) >= 0);
-
-                            if (!isVirtual)
-                            {
-                                if (sb.Length > 0) sb.Append(" | ");
-                                sb.Append(name);
-                                seenNames.Add(name);
-                            }
-                        }
-                    }
-
-                    device.cb = Marshal.SizeOf(device); // 重置大小
-                    id++;
-                }
-
-                if (sb.Length > 0)
-                {
-                    _cachedGpuName = sb.ToString();
-                }
+                return new PerformanceCounter(_adapterCategory.CategoryName, englishName, instanceName);
             }
             catch
             {
-                _cachedGpuName = "Generic Graphics Device";
+                try
+                {
+                    string cnName = englishName switch
+                    {
+                        "Dedicated Usage" => "专用使用量",
+                        "Shared Usage" => "共享使用量",
+                        _ => englishName
+                    };
+                    return new PerformanceCounter(_adapterCategory.CategoryName, cnName, instanceName);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+
+        // [修复] 补回 CreateProcessCounter
+        private PerformanceCounter CreateProcessCounter(string englishName, string instanceName)
+        {
+            if (_processCategory == null) return null;
+            try
+            {
+                return new PerformanceCounter(_processCategory.CategoryName, englishName, instanceName);
+            }
+            catch
+            {
+                try
+                {
+                    string cnName = englishName == "Dedicated Usage" ? "专用使用量" : "共享使用量";
+                    return new PerformanceCounter(_processCategory.CategoryName, cnName, instanceName);
+                }
+                catch { return null; }
             }
         }
 
         public string GetGpuName() => _cachedGpuName;
 
-        public string GetTotalVramStatus() => "监控模式: Windows 通用计数器 (WDDM)";
-
         public void Refresh()
         {
             if (!_isSupported) return;
-
             if (Monitor.TryEnter(_lock))
             {
                 try
                 {
-                    var instanceNames = _category.GetInstanceNames();
-                    _pidToInstanceMap.Clear();
-                    var activeInstances = new HashSet<string>();
-
-                    foreach (var name in instanceNames)
+                    if (_processCategory != null)
                     {
-                        var parts = name.Split('_');
-                        if (parts.Length > 1 && parts[0] == "pid" && uint.TryParse(parts[1], out uint pid))
+                        var instanceNames = _processCategory.GetInstanceNames();
+                        _pidToInstanceMap.Clear();
+
+                        foreach (var name in instanceNames)
                         {
-                            if (!_pidToInstanceMap.ContainsKey(pid)) _pidToInstanceMap[pid] = new List<string>();
-                            _pidToInstanceMap[pid].Add(name);
-                            activeInstances.Add(name);
+                            if (name.StartsWith("pid_"))
+                            {
+                                var parts = name.Split('_');
+                                if (parts.Length > 1 && uint.TryParse(parts[1], out uint pid))
+                                {
+                                    if (!_pidToInstanceMap.ContainsKey(pid))
+                                        _pidToInstanceMap[pid] = new List<string>();
+                                    _pidToInstanceMap[pid].Add(name);
+                                }
+                            }
                         }
-                    }
-
-                    var deadKeys = _counters.Keys.Where(k => !activeInstances.Any(inst => k.StartsWith(inst))).ToList();
-                    foreach (var key in deadKeys)
-                    {
-                        if (_counters.TryGetValue(key, out var c)) { c.Dispose(); _counters.Remove(key); }
                     }
                 }
                 catch { }
                 finally { Monitor.Exit(_lock); }
             }
+        }
+
+        public List<GpuStatusInfo> GetGpuStatuses()
+        {
+            var result = new List<GpuStatusInfo>();
+            foreach (var adapter in _adapters)
+            {
+                var info = new GpuStatusInfo
+                {
+                    Name = adapter.Name,
+                    DedicatedTotal = adapter.DedicatedTotal,
+                    SharedTotal = adapter.SharedTotal,
+                    CoreLoad = 0
+                };
+
+                try
+                {
+                    if (adapter.DedicatedCounter != null) info.DedicatedUsed = (ulong)adapter.DedicatedCounter.NextValue();
+                    if (adapter.SharedCounter != null) info.SharedUsed = (ulong)adapter.SharedCounter.NextValue();
+                }
+                catch { }
+
+                result.Add(info);
+            }
+            return result;
         }
 
         public Dictionary<uint, (ulong Vram, string Engine)> GetProcessVramUsage()
@@ -157,28 +272,25 @@ namespace VRAMonitor.Services.Providers
                 foreach (var kvp in _pidToInstanceMap)
                 {
                     uint pid = kvp.Key;
-                    ulong totalBytes = 0;
-                    foreach (var instanceName in kvp.Value)
+                    ulong total = 0;
+                    foreach (var instance in kvp.Value)
                     {
-                        totalBytes += ReadCounter(instanceName, "Dedicated Usage");
+                        total += ReadProcessCounter(instance, "Dedicated Usage");
                     }
-
-                    if (totalBytes > 0)
-                    {
-                        result[pid] = (totalBytes, "GPU - 3D/Copy");
-                    }
+                    if (total > 0) result[pid] = (total, "GPU (WDDM)");
                 }
                 return result;
             }
         }
 
-        private ulong ReadCounter(string instanceName, string counterName)
+        private ulong ReadProcessCounter(string instance, string counterName)
         {
-            string key = $"{instanceName}_{counterName}";
-            if (!_counters.TryGetValue(key, out var counter))
+            string key = $"{instance}_{counterName}";
+            if (!_processCounters.TryGetValue(key, out var counter))
             {
-                try { counter = new PerformanceCounter(_categoryName, counterName, instanceName); _counters[key] = counter; }
-                catch { return 0; }
+                counter = CreateProcessCounter(counterName, instance);
+                if (counter != null) _processCounters[key] = counter;
+                else return 0;
             }
             try { return (ulong)counter.NextValue(); } catch { return 0; }
         }
@@ -187,25 +299,11 @@ namespace VRAMonitor.Services.Providers
         {
             lock (_lock)
             {
-                foreach (var c in _counters.Values) c.Dispose();
-                _counters.Clear();
+                foreach (var c in _processCounters.Values) c.Dispose();
+                _processCounters.Clear();
+                foreach (var a in _adapters) { a.DedicatedCounter?.Dispose(); a.SharedCounter?.Dispose(); }
+                _adapters.Clear();
             }
         }
-
-        #region P/Invoke
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        static extern bool EnumDisplayDevices(string lpDevice, uint iDevNum, ref DISPLAY_DEVICE lpDisplayDevice, uint dwFlags);
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        struct DISPLAY_DEVICE
-        {
-            [MarshalAs(UnmanagedType.U4)] public int cb;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string DeviceName;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceString;
-            [MarshalAs(UnmanagedType.U4)] public int StateFlags;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceID;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceKey;
-        }
-        #endregion
     }
 }

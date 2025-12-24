@@ -3,43 +3,47 @@ using System.Collections.Generic;
 
 namespace VRAMonitor.Services
 {
+    // [新增] 强类型的 GPU 状态信息
+    public struct GpuStatusInfo
+    {
+        public string Name;           // 显卡名称 (e.g. "NVIDIA GeForce RTX 4060")
+        public ulong DedicatedUsed;   // 专用显存已用 (Bytes)
+        public ulong DedicatedTotal;  // 专用显存总量 (Bytes)
+        public ulong SharedUsed;      // 共享显存已用 (Bytes)
+        public ulong SharedTotal;     // 共享显存总量 (Bytes)
+        public float CoreLoad;        // 核心利用率 (0-100)
+
+        // 辅助判断：是否为核显 
+        // 判定法：如果专用显存 < 1GB 且 共享显存 > 专用显存，判定为核显
+        // 现代核显（统一内存）通常拥有巨大的共享显存，但只有极少的专用显存（如 128MB-512MB）
+        public bool IsIntegrated
+        {
+            get
+            {
+                // 1GB = 1024 * 1024 * 1024
+                ulong oneGb = 1024ul * 1024 * 1024;
+                return DedicatedTotal < oneGb && SharedTotal > DedicatedTotal;
+            }
+        }
+    }
+
     public interface IGpuTelemetryProvider : IDisposable
     {
-        /// <summary>
-        /// 提供者的名称（如 "NVML", "WDDM"）
-        /// </summary>
         string ProviderName { get; }
-
-        /// <summary>
-        /// 显卡是否可用/支持
-        /// </summary>
         bool IsSupported { get; }
 
-        /// <summary>
-        /// [新增] 获取被监控的 GPU 数量 (用于状态栏显示)
-        /// </summary>
+        // 获取 GPU 数量
         int GpuCount { get; }
 
-        /// <summary>
-        /// 获取显卡名称
-        /// </summary>
+        // [修改] 获取显卡名称 (简单字符串，用于标题)
         string GetGpuName();
 
-        /// <summary>
-        /// 获取总体显存状态字符串
-        /// </summary>
-        string GetTotalVramStatus();
+        // [修改] 获取所有 GPU 的详细状态列表
+        List<GpuStatusInfo> GetGpuStatuses();
 
-        /// <summary>
-        /// [修改] 获取进程显存数据
-        /// 返回字典: PID -> (显存大小, 引擎名称字符串)
-        /// 引擎名称示例: "GPU 0 - 3D"
-        /// </summary>
+        // 保持原有的进程获取方法
         Dictionary<uint, (ulong Vram, string Engine)> GetProcessVramUsage();
 
-        /// <summary>
-        /// 刷新内部状态
-        /// </summary>
         void Refresh();
     }
 }

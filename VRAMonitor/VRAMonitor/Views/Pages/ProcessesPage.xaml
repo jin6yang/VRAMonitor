@@ -7,23 +7,44 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:VRAMonitor.Models"
+    xmlns:viewmodels="using:VRAMonitor.ViewModels.Shared"
     xmlns:helpers="using:VRAMonitor.Helpers"
     mc:Ignorable="d">
 
     <Page.Resources>
         <CollectionViewSource x:Name="ProcessCVS" IsSourceGrouped="False" />
 
-        <!-- [新增] 定义两种 ListViewItem 样式 -->
-        <!-- 1. 无胶囊指示器 (默认) -->
         <Style x:Key="ProcessItemStyle_NoPill" TargetType="ListViewItem">
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="Padding" Value="12,0,12,0"/>
         </Style>
 
-        <!-- 2. 有胶囊指示器 (基于 WinUI 默认样式) -->
         <Style x:Key="ProcessItemStyle_WithPill" TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="Padding" Value="12,0,12,0"/>
+        </Style>
+
+        <Style x:Key="HeaderButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter x:Name="ContentPresenter"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTransitions="{TemplateBinding ContentTransitions}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Padding="{TemplateBinding Padding}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          AutomationProperties.AccessibilityView="Raw"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <DataTemplate x:Key="ProcessItemTemplate" x:DataType="models:GpuProcess">
@@ -36,13 +57,11 @@
                     <ColumnDefinition Width="150"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- 1. 应用 -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
                     <Image Source="{x:Bind Icon, Mode=OneWay}" Width="24" Height="24" Stretch="Uniform"/>
                     <TextBlock Text="{x:Bind Name, Mode=OneWay}" VerticalAlignment="Center" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
 
-                <!-- 2. 状态 (效能模式图标) -->
                 <FontIcon Grid.Column="1"
                           x:Uid="Process_EfficiencyIcon"
                           Glyph="&#xEC0A;" 
@@ -52,13 +71,10 @@
                           VerticalAlignment="Center"
                           FontSize="14"/>
 
-                <!-- 3. PID -->
                 <TextBlock Grid.Column="2" Text="{x:Bind Pid}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
 
-                <!-- 4. 显存 -->
                 <TextBlock Grid.Column="3" Text="{x:Bind VramUsageFormatted, Mode=OneWay}" VerticalAlignment="Center" FontWeight="SemiBold"/>
 
-                <!-- 5. GPU 引擎 -->
                 <TextBlock Grid.Column="4" Text="{x:Bind GpuEngine, Mode=OneWay}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
             </Grid>
         </DataTemplate>
@@ -66,17 +82,29 @@
 
     <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="20">
         <!-- 顶部标题区 -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+        <StackPanel Grid.Row="0" Margin="0,0,0,10" Spacing="8">
             <TextBlock x:Uid="PageTitle_Processes" Text="Processes" Style="{ThemeResource TitleTextBlockStyle}"/>
 
-            <TextBlock x:Name="GpuNameTextBlock" Text="{x:Bind ViewModel.GpuName, Mode=OneWay}" Style="{ThemeResource SubtitleTextBlockStyle}"/>
-            <TextBlock Text="{x:Bind ViewModel.TotalVramStatus, Mode=OneWay}" 
-                       Style="{ThemeResource BodyStrongTextBlockStyle}" 
-                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                       Margin="0,2,0,0"/>
+            <!-- [核心修改] 使用 ItemsControl 显示多 GPU 状态 -->
+            <!-- 绑定到 ViewModel.GpuStatusList，替代旧的 TextBlock -->
+            <ItemsControl ItemsSource="{x:Bind ViewModel.GpuStatusList, Mode=OneWay}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="viewmodels:GpuStatusViewModel">
+                        <StackPanel Margin="0,0,0,12">
+                            <!-- 第一行：显卡名称 [GPU 0] Name (大号字) -->
+                            <TextBlock Text="{x:Bind Header}" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <!-- 第二行：状态详情 (小号字，灰色) -->
+                            <TextBlock Text="{x:Bind Details}" 
+                                       Style="{ThemeResource BodyStrongTextBlockStyle}" 
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </StackPanel>
 
-        <!-- 表头 (ListView 无法自动生成表头，使用 Grid 模拟以保持 DataGrid 的外观) -->
+        <!-- 表头 -->
         <Grid Grid.Row="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="12,8" CornerRadius="4,4,0,0" BorderThickness="1,1,1,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*" MinWidth="200"/>
@@ -85,15 +113,59 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="150"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" x:Uid="HeaderApp" Text="Application" FontWeight="SemiBold" Opacity="0.8"/>
-            <TextBlock Grid.Column="1" x:Uid="HeaderStatus" Text="Status" FontWeight="SemiBold" Opacity="0.8" HorizontalAlignment="Center"/>
-            <TextBlock Grid.Column="2" x:Uid="HeaderPID" Text="PID" FontWeight="SemiBold" Opacity="0.8"/>
-            <TextBlock Grid.Column="3" x:Uid="HeaderVRAM" Text="VRAM" FontWeight="SemiBold" Opacity="0.8"/>
-            <TextBlock Grid.Column="4" x:Uid="HeaderEngine" Text="Engine" FontWeight="SemiBold" Opacity="0.8"/>
+
+            <!-- Application Header -->
+            <Button Grid.Column="0" Style="{StaticResource HeaderButtonStyle}" Command="{x:Bind ViewModel.SortCommand}" CommandParameter="App">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock x:Uid="HeaderApp" Text="Application" FontWeight="SemiBold" Opacity="0.8"/>
+                    <FontIcon Glyph="{x:Bind ViewModel.GetSortIconGlyph(ViewModel.CurrentSortDirection), Mode=OneWay}" 
+                              Visibility="{x:Bind ViewModel.GetSortIconVisibility('App', ViewModel.CurrentSortColumn), Mode=OneWay}"
+                              FontSize="10" VerticalAlignment="Center" Opacity="0.8"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Status Header -->
+            <Button Grid.Column="1" Style="{StaticResource HeaderButtonStyle}" HorizontalContentAlignment="Center" Command="{x:Bind ViewModel.SortCommand}" CommandParameter="Status">
+                <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                    <TextBlock x:Uid="HeaderStatus" Text="Status" FontWeight="SemiBold" Opacity="0.8"/>
+                    <FontIcon Glyph="{x:Bind ViewModel.GetSortIconGlyph(ViewModel.CurrentSortDirection), Mode=OneWay}" 
+                              Visibility="{x:Bind ViewModel.GetSortIconVisibility('Status', ViewModel.CurrentSortColumn), Mode=OneWay}"
+                              FontSize="10" VerticalAlignment="Center" Opacity="0.8"/>
+                </StackPanel>
+            </Button>
+
+            <!-- PID Header -->
+            <Button Grid.Column="2" Style="{StaticResource HeaderButtonStyle}" Command="{x:Bind ViewModel.SortCommand}" CommandParameter="Pid">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock x:Uid="HeaderPID" Text="PID" FontWeight="SemiBold" Opacity="0.8"/>
+                    <FontIcon Glyph="{x:Bind ViewModel.GetSortIconGlyph(ViewModel.CurrentSortDirection), Mode=OneWay}" 
+                              Visibility="{x:Bind ViewModel.GetSortIconVisibility('Pid', ViewModel.CurrentSortColumn), Mode=OneWay}"
+                              FontSize="10" VerticalAlignment="Center" Opacity="0.8"/>
+                </StackPanel>
+            </Button>
+
+            <!-- VRAM Header -->
+            <Button Grid.Column="3" Style="{StaticResource HeaderButtonStyle}" Command="{x:Bind ViewModel.SortCommand}" CommandParameter="Vram">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock x:Uid="HeaderVRAM" Text="VRAM" FontWeight="SemiBold" Opacity="0.8"/>
+                    <FontIcon Glyph="{x:Bind ViewModel.GetSortIconGlyph(ViewModel.CurrentSortDirection), Mode=OneWay}" 
+                              Visibility="{x:Bind ViewModel.GetSortIconVisibility('Vram', ViewModel.CurrentSortColumn), Mode=OneWay}"
+                              FontSize="10" VerticalAlignment="Center" Opacity="0.8"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Engine Header -->
+            <Button Grid.Column="4" Style="{StaticResource HeaderButtonStyle}" Command="{x:Bind ViewModel.SortCommand}" CommandParameter="Engine">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock x:Uid="HeaderEngine" Text="Engine" FontWeight="SemiBold" Opacity="0.8"/>
+                    <FontIcon Glyph="{x:Bind ViewModel.GetSortIconGlyph(ViewModel.CurrentSortDirection), Mode=OneWay}" 
+                              Visibility="{x:Bind ViewModel.GetSortIconVisibility('Engine', ViewModel.CurrentSortColumn), Mode=OneWay}"
+                              FontSize="10" VerticalAlignment="Center" Opacity="0.8"/>
+                </StackPanel>
+            </Button>
         </Grid>
 
         <!-- ListView 主体 -->
-        <!-- [修改] 移除了内联的 ItemContainerStyle，将在代码隐藏中动态设置 -->
         <ListView
             x:Name="ProcessListView"
             Grid.Row="2"
@@ -115,7 +187,7 @@
                 <GroupStyle>
                     <GroupStyle.HeaderTemplate>
                         <DataTemplate x:DataType="helpers:GroupInfoList">
-                            <Border Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}" Height="32" Padding="10,0">
+                            <Border Background="Transparent" Height="32" Padding="10,0">
                                 <TextBlock Text="{x:Bind Key}" Style="{ThemeResource TitleTextBlockStyle}" VerticalAlignment="Center"/>
                             </Border>
                         </DataTemplate>
@@ -123,7 +195,6 @@
                 </GroupStyle>
             </ListView.GroupStyle>
 
-            <!-- ListView 右键菜单 -->
             <ListView.ContextFlyout>
                 <MenuFlyout>
                     <ToggleMenuFlyoutItem x:Uid="Menu_GroupBy" 

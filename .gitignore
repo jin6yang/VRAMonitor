@@ -38,6 +38,11 @@ bld/
 # Uncomment if you have tasks that create the project's static files in wwwroot
 #wwwroot/
 
+# JetBrains IDE cache/options directory
+.idea/
+# .idea/ directory contains all the project settings and configurations for JetBrains IDEs.
+# It's recommended to ignore this directory to avoid committing IDE-specific settings.
+
 # Visual Studio 2017 auto generated files
 Generated\ Files/
 

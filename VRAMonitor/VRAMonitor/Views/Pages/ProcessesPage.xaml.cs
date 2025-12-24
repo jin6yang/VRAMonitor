@@ -8,12 +8,13 @@ using System.IO;
 using System.Runtime.InteropServices;
 using VRAMonitor.Services;
 using VRAMonitor.ViewModels.Pages;
-using VRAMonitor.Views.Interfaces; // [修改] 更新命名空间引用
+using VRAMonitor.Views.Interfaces;
 using Windows.ApplicationModel.Resources;
+// 引用 Dispatching 命名空间
+using Microsoft.UI.Dispatching;
 
 namespace VRAMonitor.Views.Pages
 {
-    // 实现 ISearchablePage 接口
     public sealed partial class ProcessesPage : Page, ISearchablePage
     {
         public ProcessesPageViewModel ViewModel { get; }
@@ -63,7 +64,9 @@ namespace VRAMonitor.Views.Pages
 
         public ProcessesPage()
         {
-            ViewModel = new ProcessesPageViewModel();
+            // [修改] 显式传入 UI 线程的 DispatcherQueue，防止 ViewModel 内部获取到错误的线程上下文
+            ViewModel = new ProcessesPageViewModel(DispatcherQueue.GetForCurrentThread());
+
             InitializeComponent();
 
             try { _resourceLoader = new ResourceLoader(); } catch { }
@@ -79,7 +82,6 @@ namespace VRAMonitor.Views.Pages
 
         public void OnSearch(string query)
         {
-            // 将搜索请求转发给 ViewModel
             ViewModel.FilterText = query;
         }
 

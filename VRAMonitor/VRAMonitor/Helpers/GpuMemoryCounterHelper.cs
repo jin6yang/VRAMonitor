@@ -1,4 +1,4 @@
-﻿// 注意！此类已经被废弃，被WddmTelemetryProvider.cs代替
+﻿// 注意！此类(GpuMemoryCounterHelper.cs)已经被废弃，当前被WddmTelemetryProvider.cs代替
 
 using System;
 using System.Collections.Generic;

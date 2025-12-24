@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage;
-using Windows.Storage.FileProperties;
+using Windows.Storage.Streams; // 用于 DataReader
 
 namespace VRAMonitor.Helpers;
 
@@ -25,13 +23,13 @@ public static class ProcessInfoHelper
         { "taskmgr", "任务管理器" },
         { "smss", "Windows 会话管理器" },
         { "services", "服务和控制器应用" },
-        { "registry", "注册表" }, // 这是一个内核伪进程，没有实体文件，无法获取图标
+        { "registry", "注册表" }, 
         { "fontdrvhost", "用户模式字体驱动程序主机" },
         { "ctfmon", "CTF 加载程序" },
         { "searchhost", "搜索主机" },
         { "startmenuexperiencehost", "开始菜单" },
         { "textinputhost", "Windows 文本输入体验" },
-        { "tabtip", "触摸键盘和手写面板" } // 新增：触摸键盘
+        { "tabtip", "触摸键盘和手写面板" } 
     };
 
     public class ProcessMetadata
@@ -39,11 +37,14 @@ public static class ProcessInfoHelper
         public string FriendlyName { get; set; }
         public string FullPath { get; set; }
         public string Publisher { get; set; }
-        public ImageSource Icon { get; set; }
+        
+        // [修改] 不再直接持有 UI 对象 ImageSource，改为持有纯数据
+        // 这避免了在后台线程创建 UI 对象导致的 RPC_E_WRONG_THREAD 崩溃
+        public byte[] IconData { get; set; } 
     }
 
     /// <summary>
-    /// 异步获取进程的详细信息（图标、名称、路径等）
+    /// 异步获取进程的详细信息（图标数据、名称、路径等）
     /// </summary>
     public static async Task<ProcessMetadata> GetMetadataAsync(uint pid)
     {
@@ -52,7 +53,7 @@ public static class ProcessInfoHelper
             FriendlyName = $"PID: {pid}",
             FullPath = "",
             Publisher = "未知发布者",
-            Icon = null
+            IconData = null
         };
 
         string processName = "";
@@ -60,9 +61,8 @@ public static class ProcessInfoHelper
         try
         {
             var process = Process.GetProcessById((int)pid);
-            processName = process.ProcessName; // 获取进程名
+            processName = process.ProcessName; 
 
-            // --- 修复关键点：只要获取到了进程名，先用它作为保底 ---
             if (!string.IsNullOrEmpty(processName))
             {
                 metadata.FriendlyName = processName;
@@ -70,7 +70,6 @@ public static class ProcessInfoHelper
         }
         catch
         {
-            // 进程可能已退出
             return metadata;
         }
 
@@ -83,25 +82,22 @@ public static class ProcessInfoHelper
             string sys32 = Environment.GetFolderPath(Environment.SpecialFolder.System);
             string winRoot = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
 
-            // 特殊路径处理
             if (processName.Equals("explorer", StringComparison.OrdinalIgnoreCase))
             {
                 metadata.FullPath = Path.Combine(winRoot, "explorer.exe");
             }
             else if (processName.Equals("tabtip", StringComparison.OrdinalIgnoreCase))
             {
-                // TabTip 位于 C:\Program Files\Common Files\microsoft shared\ink\TabTip.exe
                 string commonFiles = Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles);
                 metadata.FullPath = Path.Combine(commonFiles, @"microsoft shared\ink\TabTip.exe");
             }
             else
             {
-                // 默认假设在 System32 下
                 metadata.FullPath = Path.Combine(sys32, processName + ".exe");
             }
         }
 
-        // --- 步骤 2: 尝试获取真实路径和元数据 (如果权限允许) ---
+        // --- 步骤 2: 尝试获取真实路径和元数据 ---
         try
         {
             var process = Process.GetProcessById((int)pid);
@@ -128,7 +124,6 @@ public static class ProcessInfoHelper
         }
         catch
         {
-            // 权限不足处理逻辑
             if (string.IsNullOrEmpty(metadata.FullPath))
             {
                 metadata.FullPath = "N/A (权限不足)";
@@ -139,7 +134,7 @@ public static class ProcessInfoHelper
             }
         }
 
-        // --- 步骤 3: 提取图标 ---
+        // --- 步骤 3: 提取图标数据 (转为 byte[]) ---
         if (!string.IsNullOrEmpty(metadata.FullPath) &&
             !metadata.FullPath.StartsWith("N/A") &&
             File.Exists(metadata.FullPath))
@@ -147,13 +142,19 @@ public static class ProcessInfoHelper
             try
             {
                 StorageFile file = await StorageFile.GetFileFromPathAsync(metadata.FullPath);
-                var thumbnail = await file.GetThumbnailAsync(ThumbnailMode.SingleItem, 32, ThumbnailOptions.ResizeThumbnail);
-
-                if (thumbnail != null)
+                using (var thumbnail = await file.GetThumbnailAsync(Windows.Storage.FileProperties.ThumbnailMode.SingleItem, 32, Windows.Storage.FileProperties.ThumbnailOptions.ResizeThumbnail))
                 {
-                    BitmapImage bitmapImage = new BitmapImage();
-                    await bitmapImage.SetSourceAsync(thumbnail);
-                    metadata.Icon = bitmapImage;
+                    if (thumbnail != null)
+                    {
+                        // 将流转换为 byte[]，这样就可以跨线程安全传递了
+                        var bytes = new byte[thumbnail.Size];
+                        using (var reader = new DataReader(thumbnail.GetInputStreamAt(0)))
+                        {
+                            await reader.LoadAsync((uint)thumbnail.Size);
+                            reader.ReadBytes(bytes);
+                        }
+                        metadata.IconData = bytes;
+                    }
                 }
             }
             catch { }

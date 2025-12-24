@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace VRAMonitor.Nvidia;
 
@@ -52,13 +49,20 @@ public static class NvmlApi
         public uint computeInstanceId;
     }
 
-    // [新增] 显存信息结构体
     [StructLayout(LayoutKind.Sequential)]
     public struct NvmlMemory
     {
         public ulong total;
         public ulong free;
         public ulong used;
+    }
+
+    // [新增] 利用率结构体
+    [StructLayout(LayoutKind.Sequential)]
+    public struct NvmlUtilization
+    {
+        public uint gpu;    // Core Load %
+        public uint memory; // Memory Controller Load %
     }
 
     #endregion
@@ -70,9 +74,6 @@ public static class NvmlApi
 
     [DllImport(NvmlDll, EntryPoint = "nvmlShutdown")]
     public static extern NvmlReturn Shutdown();
-
-    [DllImport(NvmlDll, EntryPoint = "nvmlErrorString")]
-    public static extern IntPtr ErrorString(NvmlReturn result);
 
     [DllImport(NvmlDll, EntryPoint = "nvmlDeviceGetCount_v2")]
     public static extern NvmlReturn DeviceGetCount(ref uint deviceCount);
@@ -86,12 +87,12 @@ public static class NvmlApi
     [DllImport(NvmlDll, EntryPoint = "nvmlDeviceGetGraphicsRunningProcesses_v2")]
     public static extern NvmlReturn DeviceGetGraphicsRunningProcesses(IntPtr device, ref uint infoCount, [In, Out] NvmlProcessInfo[] infos);
 
-    [DllImport(NvmlDll, EntryPoint = "nvmlSystemGetProcessName")]
-    public static extern NvmlReturn SystemGetProcessName(uint pid, StringBuilder name, uint length);
-
-    // [新增] 获取显存详细信息
     [DllImport(NvmlDll, EntryPoint = "nvmlDeviceGetMemoryInfo")]
     public static extern NvmlReturn DeviceGetMemoryInfo(IntPtr device, out NvmlMemory memory);
+
+    // [新增] 获取利用率
+    [DllImport(NvmlDll, EntryPoint = "nvmlDeviceGetUtilizationRates")]
+    public static extern NvmlReturn DeviceGetUtilizationRates(IntPtr device, out NvmlUtilization utilization);
 
     #endregion
 }
