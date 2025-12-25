@@ -110,24 +110,25 @@ VRAMonitor
 - 托盘菜单在第一次显示时，长度过短可能会遮住部分字，此为第三方库的问题
 - 标注为 “**LAB**” 的选项可能不稳定，可能会造成意想不到的后果
 - 进程页面监控到的GPU引擎可能与任务管理器有出入，这是正常现象
+- 部分 NVIDIA 驱动程序版本（比如581.15），在特定Windows版本下（比如Windows 11 23H2），可能会出现 NVIDIA APP 叠加层（NVIDIA Overlay.exe）显存数值显示异常的问题，请更新驱动程序版本或者Windows版本以修复此问题
 
 
 
 
 ## 即刻体验
 
-**最低系统要求:**
+### **最低系统要求:**
 
 Windows 10, version 1903 (10.0.18362.0)
 
 .NET Desktop Runtime 10 | [下载 .NET 10.0 (Linux、macOS 和 Windows) | .NET](https://dotnet.microsoft.com/download/dotnet/10.0)
 
-**下载：**
+### **下载：**
 
 | GitHub | [Releases](https://github.com/jin6yang/VRAMonitor/releases) |
 | ------ | ----------------------------------------------------------- |
 
-**安装：**
+### **安装：**
 
 > **注意！**安装前不要忘记打开“设置-高级-**开发人员模式**”
 
@@ -135,7 +136,11 @@ Windows 10, version 1903 (10.0.18362.0)
 
 [旁加载第三方应用 | Microsoft Learn](https://learn.microsoft.com/windows/application-management/sideload-apps-in-windows)
 
-**如何删除证书?**
+### **安装失败？**
+
+如果**安装失败**且提示原因为“**应用安装程序无法安装包相关项**”，请使用`Install.ps1`安装脚本进行安装
+
+### **如何删除证书?**
 
 1. 	按 **Win + R** 打开运行框
 2. 	输入：
