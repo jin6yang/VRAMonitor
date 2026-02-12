@@ -119,7 +119,7 @@ VRAMonitor
 
 ### **最低系统要求:**
 
-Windows 10, version 1903 (10.0.18362.0)
+Windows 10, version 1809 (10.0.17763.0)
 
 .NET Desktop Runtime 10 | [下载 .NET 10.0 (Linux、macOS 和 Windows) | .NET](https://dotnet.microsoft.com/download/dotnet/10.0)
 
@@ -138,7 +138,9 @@ Windows 10, version 1903 (10.0.18362.0)
 
 ### **安装失败？**
 
-如果**安装失败**且提示原因为“**应用安装程序无法安装包相关项**”，请使用`Install.ps1`安装脚本进行安装
+> 可能的提示原因为“**应用安装程序无法安装包相关项**”
+
+如果**安装失败**，请使用`Install.ps1`安装脚本进行安装，安装脚本可以自动化安装过程，包括导入证书，只需要用户同意/拒绝。
 
 ### **如何删除证书?**
 
