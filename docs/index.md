@@ -26,12 +26,21 @@ VRAMonitor
 <div align=center>
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/)
-[![zread](https://img.shields.io/badge/Ask_Zread-_.svg?style=flat&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff)](https://zread.ai/)
+[![Ask Zread](https://img.shields.io/badge/Ask_Zread-_.svg?style=flat&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff)](https://zread.ai/)
+[![Ask Code Wiki](https://img.shields.io/badge/-Ask_Code_Wiki-0e182e?style=flat&logo=googlegemini&logoColor=6192f7&labelColor=000000)](https://codewiki.google/)
 
 </div>
 
 
 ------
+
+## 用户手册
+
+暂无（NoteBookLM方案待定）
+
+[![Ask NoteBookLM](https://img.shields.io/badge/-Ask_NotebookLM-3f4255?style=flat&logo=notebooklm&logoColor=ffffff&labelColor=000000)](https://notebooklm.google.com/)
+
+
 
 ## 反馈和社群
 
@@ -43,7 +52,7 @@ VRAMonitor
 
 ## 主要功能
 
-- 进程管理
+- 进程管理（支持大部分兼容 Windows 的 GPU）
   - 查看每个应用的具体显存使用量
   - 结束进程
   - 把进程设置为效能模式
@@ -65,13 +74,25 @@ VRAMonitor
 
 ## 屏幕截图
 
-![暂无](Screenshots\1.png)
+![](Screenshots/1.png)
+
+![](Screenshots/2.png)
+
+![](Screenshots/3.png)
 
 
 
 ## 更新路线
 
-暂无
+> **注意！**更新路线会在发布**Releases**时更新
+
+- [ ] 完善设置页面部分设置的功能
+- [ ] 制作看板页面 (DashboardPage)
+- [ ] 在设置页面中添加一个设置项，“选择默认启动页”
+- [x] 兼容 AMD GPU (使用 DXGI+WDDM)
+- [x] 兼容 Intel GPU (使用 DXGI+WDDM)
+- [x] 兼容 Moore Threads GPU (使用 DXGI+WDDM)
+- [x] 优化对 NVIDIA GPU 的数据获取 (使用 DXGI+NVML+WDDM)
 
 
 
@@ -87,30 +108,41 @@ VRAMonitor
   - Blur
   - None
 - 托盘菜单在第一次显示时，长度过短可能会遮住部分字，此为第三方库的问题
+- 标注为 “**LAB**” 的选项可能不稳定，可能会造成意想不到的后果
+- 进程页面监控到的GPU引擎可能与任务管理器有出入，这是正常现象
+- 部分 NVIDIA 驱动程序版本（比如581.15），在特定Windows版本下（比如Windows 11 23H2），可能会出现 NVIDIA APP 叠加层（NVIDIA Overlay.exe）显存数值显示异常的问题，请更新驱动程序版本或者Windows版本以修复此问题
 
 
 
 
 ## 即刻体验
 
-**软件最低要求:**
+### **最低系统要求:**
 
-Windows 10, version 1903 (10.0.18362.0)
+Windows 10, version 1809 (10.0.17763.0)
 
 .NET Desktop Runtime 10 | [下载 .NET 10.0 (Linux、macOS 和 Windows) | .NET](https://dotnet.microsoft.com/download/dotnet/10.0)
 
-**软件下载地址：**
+### **下载：**
 
 | GitHub | [Releases](https://github.com/jin6yang/VRAMonitor/releases) |
 | ------ | ----------------------------------------------------------- |
 
-**如何安装：**
+### **安装：**
 
-> **注意！**在导入安全证书时，要选择存储位置为”**本地计算机**(L)“，选择证书存储时，需要选择“**将所有的证书都放入下列存储**(P)”，然后点击**浏览**，选择“**受信任的根证书颁发机构**”，按向导完成证书导入后，打开 '.msixbundle' 安装包即可安装应用。
+> **注意！** 安装前不要忘记打开“设置-高级-**开发人员模式**”
+
+> **注意！** 在导入安全证书时，要选择存储位置为”**本地计算机**“，选择证书存储时，需要选择“**将所有的证书都放入下列存储**”，然后点击**浏览**，选择“**受信任的根证书颁发机构**”，按向导完成证书导入后，打开  `.msixbundle`  安装包即可安装应用。
 
 [旁加载第三方应用 | Microsoft Learn](https://learn.microsoft.com/windows/application-management/sideload-apps-in-windows)
 
-**如何删除证书?**
+### **安装失败？**
+
+> 可能的提示原因为“**应用安装程序无法安装包相关项**”
+
+如果**安装失败**，请使用`Install.ps1`安装脚本进行安装，安装脚本可以自动化安装过程，包括导入证书，只需要用户同意/拒绝。
+
+### **如何删除证书?**
 
 1. 	按 **Win + R** 打开运行框
 2. 	输入：
@@ -119,26 +151,38 @@ Windows 10, version 1903 (10.0.18362.0)
 certmgr.msc
 ```
 
-3. **受信任的根证书颁发机构 → 证书**
-4. 在右侧找到颁发者为 **POINTER** 的证书
+3. 选择 **受信任的根证书颁发机构 → 证书**
+4. 找到颁发者为 **POINTER** 的证书
 5. 右键 → **删除**
 
 
 
 ## 自己构建
 
-1. 打开 Visual Studio 2026
+1. 下载或者克隆项目
+
+   ```
+   git clone https://github.com/jin6yang/VRAMonitor
+   ```
+
+2. 打开 Visual Studio 2026
    （确保拥有 “WinUI 应用程序开发” 工作负荷 和 “.NET 10.0 运行时” 单个组件）
-2. 打开项目文件 'VRAMonitor.sln'
-3. 右键解决方案，选择“还原 NuGet 包”
-4. 再次右键解决方案，选择“重新生成解决方案”
-5. 右键 ‘VRAMonitor (Packeage)’, 选择”发布-创建应用程序包“
+
+3. 打开项目文件  `VRAMonitor.sln`
+
+4. 右键解决方案，选择“还原 NuGet 包”
+
+5. 再次右键解决方案，选择“重新生成解决方案”
+
+6. 右键  `VRAMonitor (Packeage)`, 选择”发布-创建应用程序包“
+
+7. 按引导完成创建 MSIX 安装包
 
 
 
 ## 许可证
 
-![GPLv3](D:\C#\VRAMonitor\VRAMonitor\VRAMonitor\Assets\gplv3-127x51.png)
+![](VRAMonitor/VRAMonitor/Assets/gplv3-127x51.png)
 
 
 
@@ -150,4 +194,4 @@ certmgr.msc
 
 ## 感谢
 
-查看所有依赖：[GitHub Insights Dependencies · jin6yang/VRAMonitor](https://github.com/jin6yang/VRAMonitor/network/dependencies)
+查看此项目的所有依赖：[GitHub Insights Dependencies · jin6yang/VRAMonitor](https://github.com/jin6yang/VRAMonitor/network/dependencies)
