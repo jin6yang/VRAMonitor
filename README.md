@@ -130,9 +130,9 @@ Windows 10, version 1809 (10.0.17763.0)
 
 ### **安装：**
 
-> **注意！**安装前不要忘记打开“设置-高级-**开发人员模式**”
+> **注意！** 安装前不要忘记打开“设置-高级-**开发人员模式**”
 
-> **注意！**在导入安全证书时，要选择存储位置为”**本地计算机**“，选择证书存储时，需要选择“**将所有的证书都放入下列存储**”，然后点击**浏览**，选择“**受信任的根证书颁发机构**”，按向导完成证书导入后，打开  `.msixbundle`  安装包即可安装应用。
+> **注意！** 在导入安全证书时，要选择存储位置为”**本地计算机**“，选择证书存储时，需要选择“**将所有的证书都放入下列存储**”，然后点击**浏览**，选择“**受信任的根证书颁发机构**”，按向导完成证书导入后，打开  `.msixbundle`  安装包即可安装应用。
 
 [旁加载第三方应用 | Microsoft Learn](https://learn.microsoft.com/windows/application-management/sideload-apps-in-windows)
 
@@ -159,13 +159,24 @@ certmgr.msc
 
 ## 自己构建
 
-1. 打开 Visual Studio 2026
+1. 下载或者克隆项目
+
+   ```
+   git clone https://github.com/jin6yang/VRAMonitor
+   ```
+
+2. 打开 Visual Studio 2026
    （确保拥有 “WinUI 应用程序开发” 工作负荷 和 “.NET 10.0 运行时” 单个组件）
-2. 打开项目文件  `VRAMonitor.sln`
-3. 右键解决方案，选择“还原 NuGet 包”
-4. 再次右键解决方案，选择“重新生成解决方案”
-5. 右键  `VRAMonitor (Packeage)`, 选择”发布-创建应用程序包“
-6. 按引导完成创建 MSIX 安装包
+
+3. 打开项目文件  `VRAMonitor.sln`
+
+4. 右键解决方案，选择“还原 NuGet 包”
+
+5. 再次右键解决方案，选择“重新生成解决方案”
+
+6. 右键  `VRAMonitor (Packeage)`, 选择”发布-创建应用程序包“
+
+7. 按引导完成创建 MSIX 安装包
 
 
 
@@ -183,4 +194,4 @@ certmgr.msc
 
 ## 感谢
 
-查看所有依赖：[GitHub Insights Dependencies · jin6yang/VRAMonitor](https://github.com/jin6yang/VRAMonitor/network/dependencies)
+查看此项目的所有依赖：[GitHub Insights Dependencies · jin6yang/VRAMonitor](https://github.com/jin6yang/VRAMonitor/network/dependencies)
