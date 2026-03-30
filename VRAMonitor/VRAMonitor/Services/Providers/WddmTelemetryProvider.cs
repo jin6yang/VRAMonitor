@@ -28,7 +28,7 @@ namespace VRAMonitor.Services.Providers
 
         private class GpuAdapter
         {
-            // [新增] 全局统一索引
+            // 全局统一索引
             public int Index { get; set; }
             public string Name { get; set; }
             public long Luid { get; set; }
@@ -272,7 +272,13 @@ namespace VRAMonitor.Services.Providers
 
         public Dictionary<uint, (ulong Vram, string Engine)> GetProcessVramUsage()
         {
+            // 这里的 Engine 字段现在存储的是 GPU Index（如 "GPU 0", "GPU 1"），而不是原来的 LUID 字符串，方便前端显示和关联。
+            // 如果一个进程同时使用了多个 GPU，那么 Engine 字段会列出所有相关的 GPU Index（如 "GPU 0, GPU 1"）。如果无法确定 GPU，则显示为 "GPU"。
             lock (_lock)
+
+            // [重要] 如果高频刷新，且进程数量较多时，可能导致 UI 卡顿（[重要] 可能的解决方案：双缓冲）
+
+            // 通过实例名称解析出对应的 LUID，然后再匹配到 Adapter 来获取 GPU Index。这样就能把进程的 VRAM 使用情况和具体的 GPU 索引关联起来了。
             {
                 var result = new Dictionary<uint, (ulong Vram, string Engine)>();
                 if (!_isSupported) return result;
